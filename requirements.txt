@@ -1,0 +1,20 @@
+websockets>=13
+aiohttp>=3.9
+pyarrow>=15
+duckdb>=1.0
+pandas>=2.1
+numpy>=1.26
+lightgbm>=4.3
+scikit-learn>=1.4
+base58>=2.1
+python-dotenv>=1.0
+joblib>=1.3
+pillow>=10
+pytest>=8
+optuna>=4.0
+xgboost>=2.1
+matplotlib>=3.8   # graphiques du README (scripts/make_charts.py)
+# GPU (installe a part) :
+#   pip install torch --index-url https://download.pytorch.org/whl/cu130
+#   pip install sentence-transformers
+solders>=0.20

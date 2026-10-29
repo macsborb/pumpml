@@ -1,0 +1,206 @@
+# Configuration principale. Les secrets vont dans .env, jamais ici.
+
+[paths]
+data = "data"
+models = "models"
+logs = "logs"
+
+[collector]
+pumpportal_ws = "wss://pumpportal.fun/api/data"
+# Websocket Helius (la cle est ajoutee depuis .env).
+helius_ws = "wss://mainnet.helius-rpc.com/"
+helius_rpc = "https://mainnet.helius-rpc.com/"
+public_ws = "wss://api.mainnet-beta.solana.com/"
+# Source principale des trades : "public" (gratuit) ou "helius".
+# Helius facture le websocket au volume (2 credits / 0,1 Mo) : ce flux fait ~15 Mo/min,
+# soit ~430k credits/jour -> le plan Free (1M/mois) ne tient pas. Helius sert alors de secours
+# automatique (10 min) quand le websocket public tombe 3 fois de suite.
+chain_primary = "public"
+# Source des trades :
+#   "per_token" : abonnement Helius coin par coin -> trades COMPLETS (rattrapage par RPC), sur une
+#                 fraction des coins (sample_fraction) pour tenir dans le budget de credits.
+#                 ~7 Mo/min (~6 M credits/mois) pour 100 % des coins -> plan Developer (10 M) ; le plan
+#                 gratuit (1 M/mois) tient ~15 %.
+#   "firehose"  : tout pump.fun via le websocket ci-dessus (le public gratuit en perd ~2/3).
+trades_source = "per_token"
+# 100 % des creations (abonnement a l'autorite de mint) = ~770 k credits/jour pour suivre tous les coins
+# (mesure la nuit du 26/10 : 17,6 k/h a 55 %) : au-dela du plan Developer (10 M/mois = 333 k/jour).
+# Depuis le 26/10 (require_link) seuls les coins avec Twitter ou site web sont suivis (63 % des coins) :
+# 50 % d'entre eux ~ 210 k/jour, + ~85 k/jour pour les pools apres migration (exclus suivis 10 min).
+sample_fraction = 0.5
+# dernier point d'analyse (7 min) + detention max (30 min) + marge
+track_minutes = 40
+helius_daily_credit_budget = 300000
+# Budget exceptionnel pour un seul jour (le 26/10 : depassement du aux robots de volume, suivi relance).
+helius_budget_override = { date = "2026-10-26", credits = 380000 }
+# 28 et 29/10 (accord de l'utilisateur le 27/10) : +100 000 credits par jour pour l'import de l'historique des gros
+# KOL (scripts/kol_backfill.py --daily 100000 --dates 2026-10-28,2026-10-29), soit 400 000 au total ; le collecteur
+# reste a 300 000. L'import compte ses credits dans data/kol_history.db (table spend) et s'arrete apres le 29.
+# Au-dela, un coin est noye sous les robots de volume (transactions souvent echouees mais facturees) :
+# suivi coupe et coin exclu. Mesure du 26/10 : quelques coins a 2 000-5 000 notifications/min coutaient
+# plus que tout le reste.
+max_notifications_per_min = 1000
+commitment = "confirmed"
+# On garde les trades d'un token pendant N heures apres sa creation.
+track_hours = 6
+# Ecriture parquet : taille max d'un lot et intervalle de vidage.
+flush_rows = 5000
+flush_seconds = 60
+# Le "hot store" SQLite (lu par le paper trader) garde N heures.
+hot_retention_hours = 8
+# Alerte si aucun message recu pendant N secondes.
+stall_seconds = 90
+
+[metadata]
+# Passerelles IPFS essayees dans l'ordre.
+ipfs_gateways = ["https://gateway.pinata.cloud/ipfs/", "https://ipfs.filebase.io/ipfs/", "https://pump.mypinata.cloud/ipfs/",
+                 "https://ipfs.io/ipfs/", "https://dweb.link/ipfs/"]
+concurrency = 8
+timeout_seconds = 15
+download_images = true
+max_image_bytes = 3_000_000
+
+[social]
+concurrency = 4
+# Requetes max par minute vers le fournisseur X (twitterapi.io Starter depuis le 26/10 : 20 par seconde).
+rate_per_minute = 300
+# On ne paie la lecture que des tweets "frais" (age au lancement du coin, lu gratuitement dans l'id du tweet).
+fresh_minutes = 2
+# Pas de lecture si le coin a deja cet age (la reponse arriverait apres le dernier point d'analyse).
+max_coin_age_s = 400
+
+[strategy]
+# Points d'analyse : ages (s) auxquels chaque coin est note. L'IA achete au premier point ou le score
+# depasse le seuil ; apres le dernier (7 min), plus aucun achat sur ce coin.
+checkpoints_s = [5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 300, 420]
+# Latence simulee entre la decision et l'execution (s).
+# Retard du flux coin par coin Helius (~1 s en median, 3,5 s au pire 1 %) + envoi de la transaction.
+latency_s = 3.0
+buy_sol = 0.1
+take_profit = 0.5      # +50 % (compare le 25/10 : plus de gagnants, meilleurs resultats que +100 %)
+stop_loss = 0.4        # -40 %
+max_hold_s = 1800
+# Sortie si rien ne se passe : apres 2 min, si la valeur n'a jamais atteint +10 %, on vend
+# (compare le 26/10 : -9 % de pertes et positions de 3-5 min au lieu de 20-26 min).
+stale_exit_s = 120
+stale_min_gain = 0.10
+# Jamais d'achat sur un lancement groupe : plus de 25 % de la courbe achetes dans le bloc de creation
+# (+2 slots) par le createur et ses wallets. Mesure du 26/10 : 42 % des achats de l'IA etaient de ce type,
+# et ils perdaient deux fois plus en direct (-0,021 SOL par trade contre -0,011).
+max_block0_share = 0.25
+# Jamais d'achat si le lien X du coin est un tweet de plus de 2 min au lancement (deja exploite ailleurs).
+max_tweet_age_min = 2
+# Tweet frais (< 2 min) pas encore lu : on attend son contenu jusqu'a cet age du coin au lieu d'acheter a l'aveugle.
+wait_tweet_s = 60
+# Pas d'achat sur une reponse "parasite" : un autre compte, 20x plus petit, qui repond au tweet viral de
+# quelqu'un d'autre pour faire du buzz (le tweet d'origine est lu et compare).
+block_parasite = true
+# Pas d'achat d'une copie (meme image, meme lien X, ou meme nom + ticker qu'un coin deja sorti), meme si le modele
+# la note au-dessus du seuil (demande de l'utilisateur le 28/10 ; 708 des 1 077 achats en etaient, -8,5 SOL reels
+# contre -2,0 pour les originaux). Seule exception : un AUTRE tweet que celui de l'original, publie apres son
+# lancement, lu, et pas une redite (similarite des textes < copy_max_tweet_sim) = une information nouvelle.
+block_copies = true
+copy_max_tweet_sim = 0.9
+# Pas d'achat (ni de suivi des trades) sans Twitter ni site web dans les metadonnees : pas de narrative.
+require_link = true
+# Frais pump.fun (protocole + createur), en points de base, a chaque achat et vente.
+fee_bps = 125
+# Frais de priorite + base par transaction (SOL).
+tx_cost_sol = 0.0005
+
+[training]
+# Objectif : "binary" (gagne ou pas), "pnl_weighted" (pondere par l'ampleur du gain/perte), "regression" (PnL).
+# Compare le 26/10 : aucun ne bat "acheter tout" par achat ; pnl_weighted est le plus aligne sur l'argent.
+objective = "pnl_weighted"
+# Apprentissage continu : reentrainement toutes les N heures sur les donnees des derniers jours.
+# 4 h depuis le 28/10 (avant : 1 h). Sur 58 modeles horaires, 3 promus, chacun sur 12 a 25 achats de validation
+# (du bruit) ; un entrainement prend deja 20-40 min et bloque les experiences. La validation (6 h) change a peine
+# d'une heure a l'autre : reentrainer toutes les heures revient a relancer les des.
+retrain_every_hours = 4
+window_days = 14
+# Validation = les heures les plus recentes (au plus valid_hours, au plus valid_frac_max des donnees).
+valid_hours = 6
+valid_frac_max = 0.25
+# Recherche de reglages (pumpml/search.py) : famille de modele (LightGBM processeur / XGBoost carte
+# graphique), reglages, objectif, poids des donnees recentes et de chaque famille de signaux.
+# Entrainement horaire : quelques essais, en repartant des meilleurs reglages de la recherche profonde.
+search_trials = 16
+# Recherche profonde : chaque nuit (passe quotidienne) ou "python -m pumpml deepsearch".
+deep_trials = 400
+deep_hours = 4
+families = ["lgb", "xgb"]
+ensemble = 5            # le modele final = moyenne des 5 meilleurs essais (si ca fait mieux sur es)
+search_objective = true # l'objectif d'apprentissage fait partie de la recherche
+search_weights = true   # le poids de chaque famille de signaux aussi
+threads = 16
+# Familles de signaux que le modele a le droit d'utiliser. Depuis le 26/10 : la NARRATIVE seulement
+# (tweet, image, nom, liens nom <-> tweet / site, memoire des gagnants et des flops, copies, createur).
+# Le prix, les holders, le flux de trades et l'heure ne decident plus (ajouter "flux", "temps" pour revenir).
+feature_groups = ["narrative", "tweet", "meta", "gagnants", "copies", "createur"]
+# Coins avec un resultat connu necessaires pour entrainer (bas au debut : le modele sera "non promu"
+# tant qu'il ne bat pas les criteres de promotion).
+min_train_rows = 100
+min_split_rows = 10
+# Un challenger n'est promu que s'il bat le champion d'au moins ce PnL (SOL) sur la validation.
+min_improvement_sol = 0.0
+min_valid_trades = 10
+text_model = "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+image_model = "clip-ViT-B-32"
+# axes d'embedding bruts gardes (PCA) : peu tant qu'il y a peu de donnees (sinon le modele apprend par coeur)
+embedding_dims = 16
+device = "cuda"
+
+[paper]
+poll_seconds = 2.0
+# Prix d'achat et de vente : cotations Jupiter reelles (jamais la courbe).
+slippage_bps = 1000
+# Recotation de chaque position ouverte (s) ; la courbe ne sert qu'a declencher une cotation prioritaire.
+requote_seconds = 10
+# Positions ouvertes en meme temps (capital limite + budget de cotations Jupiter : 30/min sans cle).
+max_open_positions = 20
+
+[amm]
+# Apres la migration (PumpSwap). Phase 1 : collecte + observation, aucun achat tant qu'il n'y a pas de modele.
+enabled = true
+track_minutes = 60          # suivi des echanges du pool apres la migration (coins eligibles)
+excluded_track_minutes = 10 # coins exclus (rug probable) : suivi court, juste pour comparer
+max_sig_pages = 20          # historique de courbe lu jusqu'a 20 000 transactions (1 credit / 1000)
+checkpoints_s = [15, 30, 60, 120, 300]   # points d'analyse apres la creation du pool
+# Lancements groupes (rug) : coin exclu si l'une de ces regles est vraie
+min_curve_seconds = 60      # courbe remplie en moins d'1 min apres la creation
+max_block0_share = 0.25     # plus de 25 % de la courbe achetes dans le bloc de creation (+2 slots)
+# Desactive le 26/10 : des comptes du protocole (coins a 2 milliards de tokens) faussaient la mesure et
+# excluaient des montees naturelles. La concentration reste mesuree (colonne top10_share).
+max_top10_share = 1.01
+concurrency = 6             # migrations traitees en parallele
+
+[fame]
+# Memoire des gros gagnants (scripts/import_fame.py -> data/fame.db) : migration naturelle ET plus haut de
+# market cap d'au moins ce montant. Les petits x2 ne comptent pas : seulement les coins dont on se souvient.
+min_peak_mcap_usd = 100000
+history_days = 90
+# Regle "tenue" (27/10) : plus haut mesure sur bougies de 15 min (pas une meche journaliere), le coin vaut
+# encore au moins min_hold_ratio de son plus haut hold_minutes apres, et la courbe a au moins min_curve_tx
+# transactions (une vraie foule, pas 7 gros achats). Sinon c'est un vidage : il compte comme flop.
+# win_rule = "plus_haut" revient a l'ancienne definition (plus haut journalier seulement).
+win_rule = "tenue"
+hold_minutes = 60
+min_hold_ratio = 0.3
+min_curve_tx = 100
+
+[percees]
+# Coins qui ont PERCE pendant nos collectes (pumpml/percees.py) : montes a seuil_sol de market cap (~30 000 $ avec le
+# SOL a ~100 $, presque la migration) ou migres, hors lancements groupes et coupures. Le modele compare la
+# narrative de chaque nouveau coin a eux (groupe de signaux "percees", prefixe perc_), sans prix dans les poids.
+seuil_sol = 300
+
+[kol]
+# KOL suivis (liste donnee par l utilisateur le 27/10 : pastebin 7fjizCQm, 775 wallets / 578 personnes).
+# Leurs trades pump.fun arrivent en direct par PumpPortal (subscribeAccountTrade, gratuit, tous les coins).
+enabled = true
+# Seulement les wallets actifs (scripts/kol_activity.py : derniere transaction < 7 jours et >= 100 transactions
+# sur 30 jours, ou deja vus sur nos coins). 27/10 : 278 wallets / 257 personnes gardes sur 775.
+# Liste complete : data/external/kol/kols.json ; detail : data/external/kol/activite.csv
+list_path = "data/external/kol/kols_actifs.json"
+# Gros noms : top 50 du classement mensuel Kolscan (gains reels), releve le 27/10 ; ses wallets sont ajoutes a la liste.
+top_path = "data/external/kol/kolscan_mensuel.json"

@@ -1,0 +1,295 @@
+<title>Le modèle narratif</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Mise en page : rapport d'analyse, une colonne de lecture, fiches de signaux en grille */
+:root {
+  --bg: #f6f7f5; --panel: #ffffff; --fg: #17201e; --muted: #5d6b67; --line: #dfe5e2;
+  --accent: #0e7c6b; --good: #16794a; --bad: #b4372f; --warn: #a96a07; --soft: #e6f2ef;
+  --display: "Archivo", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1514; --panel: #161e1c; --fg: #e4ebe8; --muted: #93a39e; --line: #26312e;
+  --accent: #3cc4ac; --good: #5fd39a; --bad: #f08a80; --warn: #e5b45a; --soft: #16302b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1514; --panel: #161e1c; --fg: #e4ebe8; --muted: #93a39e; --line: #26312e;
+  --accent: #3cc4ac; --good: #5fd39a; --bad: #f08a80; --warn: #e5b45a; --soft: #16302b; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--display);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 64px }
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 44px }
+header { display: grid; gap: 8px; border-bottom: 2px solid var(--fg); padding-bottom: 20px }
+.kicker { font: 600 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent) }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0; font-weight: 800; text-wrap: balance }
+h2 { font-size: 22px; margin: 0 0 10px; font-weight: 800; text-wrap: balance }
+h3 { font-size: 16px; margin: 0; text-wrap: balance }
+p { margin: 0 0 10px; max-width: 70ch } p.lead { font-size: 18px }
+section { display: grid; gap: 6px; min-width: 0 }
+.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden }
+.num { background: var(--panel); padding: 14px 16px; display: grid; gap: 2px }
+.num b { font: 600 24px/1.15 var(--mono); font-variant-numeric: tabular-nums }
+.num span { color: var(--muted); font-size: 13px }
+.pos { color: var(--good) } .neg { color: var(--bad) }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0 }
+.box.warn { border-left: 4px solid var(--warn) }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel) }
+table { width: 100%; border-collapse: collapse; font-size: 14px }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font: 600 11px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg) }
+tr:last-child td { border-bottom: 0 }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap }
+.opt td:first-child { font-weight: 600; white-space: nowrap }
+.opt td.v { font-family: var(--mono); white-space: nowrap; color: var(--accent) }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums }
+.groups { display: grid; gap: 10px }
+.g { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline }
+.bar { height: 8px; border-radius: 4px; background: var(--soft); overflow: hidden; grid-column: 1 / -1 }
+.bar i { display: block; height: 100%; background: var(--accent) }
+.sigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px }
+.sig { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 8px; align-content: start; min-width: 0 }
+.sighead { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap }
+.chip { font: 600 11px/1 var(--mono); padding: 4px 8px; border-radius: 999px; background: var(--soft); color: var(--accent); white-space: nowrap }
+.share { font: 12px var(--mono); color: var(--muted); margin: 0 }
+.seen { font-size: 14px; margin: 0 }
+.sig p { font-size: 14px }
+svg { width: 100%; height: auto; display: block }
+svg .grid { stroke: var(--line); stroke-width: 1 }
+svg .ax { fill: var(--muted); font: 11px var(--mono) }
+svg .val { fill: var(--fg); font: 600 11px var(--mono) }
+svg .b0 { fill: var(--accent); opacity: .45 } svg .b1 { fill: var(--accent) }
+ul { margin: 0; padding-left: 22px; display: grid; gap: 8px; max-width: 75ch }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px }
+</style>
+<main>
+<header>
+  <div class="kicker">Modèle 20261026-220456 · premier champion · 26 octobre, 22 h</div>
+  <h1>Le modèle narratif : ce qu'il a appris</h1>
+  <p class="lead">Depuis 18 h, l'IA ne décide plus que sur la narrative : tweet, image, nom, liens, mémoire des gagnants et des flops, copies, créateur. A 22 h 04, un de ces modèles est devenu le premier champion du projet. Voici ce qu'il fait, chaque réglage qu'il a choisi, et ce que chaque signal veut dire.</p>
+</header>
+
+<section>
+  <h2>Le résultat, sur des heures qu'il n'a jamais vues</h2>
+  <div class="nums">
+    <div class="num"><b class="pos">+0,044 SOL</b><span>sur 12 achats (5 h 26 de test)</span></div>
+    <div class="num"><b>16,7 %</b><span>de ses achats gagnent, contre 5,5 % de tous les coins</span></div>
+    <div class="num"><b class="neg">−17,08 SOL</b><span>si on avait acheté les 1 589 coins</span></div>
+    <div class="num"><b class="neg">−0,40 SOL</b><span>l'ancien champion sur les mêmes heures</span></div>
+  </div>
+  <div class="box warn"><p><b>A lire avec prudence.</b> 12 achats, c'est très peu : deux coins de plus ou de moins changent le signe. Le modèle a été promu parce qu'il a fait mieux que le précédent sur les mêmes heures et qu'il a gagné de l'argent, avec le minimum de 10 achats. C'est un premier signal positif, pas encore une preuve. Les modèles narratifs de 18 h à 22 h ont fait +0,10, +0,10, +0,05, −0,28 puis +0,04 SOL : trois positifs, un negatif, toujours sur peu d'achats.</p></div>
+</section>
+
+<section>
+  <h2>En direct depuis 18 h 14</h2>
+  <p>Le paper trader utilisé les modèles narratifs depuis 18 h 14 (budget Helius coupé une partie de la soirée).</p>
+  <div class="tw"><table>
+    <tr><th>Décision</th><th class="n">Coins</th><th class="n">Résultat si acheté (simulation)</th><th class="n">Gagnants</th></tr>
+    <tr><td>Achetés</td><td class="n">6</td><td class="n neg">−0,069 SOL</td><td class="n">0 / 6 en simulation</td></tr>
+    <tr><td>Refusés</td><td class="n">665</td><td class="n neg">−3,52 SOL</td><td class="n">4,1 %</td></tr>
+    <tr><td>Encore en analyse à leur dernier point</td><td class="n">249</td><td class="n neg">−5,97 SOL</td><td class="n">18,5 %</td></tr>
+  </table></div>
+  <p style="margin-top:10px">Les 6 achats réels au prix Jupiter ont fini a −0,005 SOL au total, avec 2 gagnants sur 6 : presque à l'équilibre. Les 665 coins refusés auraient perdu 3,5 SOL : le tri évite bien les pertes. La ligne « encore en analyse » regroupe des coins qui sont restés sous le seuil jusqu'au bout ; ils contiennent plus de gagnants parce que ce sont souvent des coins actifs, mais ils perdent quand même en moyenne.</p>
+</section>
+
+<section>
+  <h2>Les réglages qu'il a choisis, un par un</h2>
+  <p>La recherche a essayé 16 combinaisons à 22 h ; celle-ci a gagné. Chaque ligne explique ce que le réglage veut dire.</p>
+  <div class="tw"><table class="opt">
+    <tr><th>Réglage</th><th>Valeur</th><th>Ce que ca veut dire</th></tr>
+    <tr><td>Famille de modèle</td><td class="v">XGBoost (carte graphique)</td><td>Des centaines de petits arbres de décision, entraînés sur ta RTX 3070. Sur ce lancement, les 5 essais XGBoost ont tous fait mieux que les 11 essais LightGBM (meilleur score 0,17 contre 0,01).</td></tr>
+    <tr><td>Objectif</td><td class="v">pondéré par le gain, puissance 1,8</td><td>Le modèle apprend « ce coin gagne-t-il ? », mais chaque exemple pèse selon l'ampleur de son gain ou de sa perte, à la puissance 1,8 : un coin qui fait +50 % compte beaucoup plus qu'un coin a +5 %. Il cherche les gros coups, pas les petits mouvements.</td></tr>
+    <tr><td>Poids des gagnants</td><td class="v">×18</td><td>Seuls 5,5 % des coins gagnent. Sans correction, le modèle dirait « non » à tout. Chaque gagnant compte comme 18 perdants.</td></tr>
+    <tr><td>Mémoire récente</td><td class="v">demi-vie 4 jours</td><td>Un coin d'il y à 4 jours compte deux fois moins qu'un coin d'aujourd'hui : les narratives vont vite, le récent compte plus.</td></tr>
+    <tr><td>Taille des arbres</td><td class="v">profondeur 2, 216 arbres</td><td>Chaque arbre ne pose que 2 questions (par exemple « vrai site ? » puis « créateur en série ? »). Des règles très simples, additionnées. Avec seulement 27 h de données, c'est le choix le plus sur.</td></tr>
+    <tr><td>Prudence</td><td class="v">régularisation forte</td><td>Une règle n'est retenue que si elle s'appuie sur l'équivalent d'au moins ~78 coins, et seulement si elle améliore nettement les choses. Le modèle refuse d'apprendre par coeur les cas isolés.</td></tr>
+    <tr><td>Vitesse d'apprentissage</td><td class="v">0,13</td><td>Chaque nouvel arbre corrige 13 % de l'erreur restante : assez rapide, compense par la prudence ci-dessus.</td></tr>
+    <tr><td>Seuil d'achat</td><td class="v">score ≥ 0,63</td><td>Le coin est acheté au premier point d'analyse ou son score dépasse 0,63. Ce seuil est choisi sur les données d'entraînement, jamais sur les heures de test.</td></tr>
+    <tr><td>Ton gout perso</td><td class="v">30 % du score</td><td>Un petit modèle appris sur tes 37 notés données « à l'aveugle » (avant de connaitre le résultat) compte pour 30 % du score final.</td></tr>
+  </table></div>
+  <h3 style="margin-top:16px">Le poids donne à chaque famille de signaux</h3>
+  <p>Sur XGBoost, ce poids règle la probabilité qu'une famille soit considérée à chaque question des arbres. La recherche l'a choisi seule.</p>
+  <div class="tw"><table class="opt">
+    <tr><th>Famille</th><th>Poids</th><th>Lecture</th></tr>
+    <tr><td>Métadonnées et liens</td><td class="v">×2,6</td><td>Le plus favorisé : vrai site web, nom, description, lien du site avec le nom.</td></tr>
+    <tr><td>Créateur</td><td class="v">×2,2</td><td>Les robots qui lancent des coins à la chaîne sont faciles à repérer et presque jamais gagnants.</td></tr>
+    <tr><td>Copies et clins d'oeil</td><td class="v">×1,9</td><td>Copie immediate ou reprise d'une vieille idée : l'écart est net (voir plus bas).</td></tr>
+    <tr><td>Gros gagnants et flops</td><td class="v">×1,3</td><td>La mémoire compte, mais elle est encore incomplète : nos 90 derniers jours sont en cours d'import.</td></tr>
+    <tr><td>Narrative (texte, image, thèmes, tes exemples)</td><td class="v">×1,0</td><td>Poids neutre, mais c'est la famille qui a le plus de signaux : elle pèse au total plus de la moitie des décisions.</td></tr>
+    <tr><td>Tweet</td><td class="v">×0,4</td><td>Le plus faible. Probable raison : de 7 h 30 à 13 h aujourd'hui, les crédits twitterapi étaient à zéro, donc ces heures n'ont aucune donnée de tweet, et 58 % des coins n'en ont pas. Ce poids devrait remonter avec des jours de données complètes.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Ce qui pèse dans ses décisions</h2>
+  <p>Part de chaque famille dans les décisions du modèle, sur les 6,283 coins des deux derniers jours.</p>
+  <div class="groups"><div class='g'><span>Narrative (texte, image, thèmes, tes exemples, tendance)</span><b class='mono'>54 %</b><div class='bar'><i style='width:100%'></i></div></div>
+<div class='g'><span>Créateur (historique, coins à la chaîne)</span><b class='mono'>18 %</b><div class='bar'><i style='width:33%'></i></div></div>
+<div class='g'><span>Métadonnées et liens (site, nom, description)</span><b class='mono'>13 %</b><div class='bar'><i style='width:25%'></i></div></div>
+<div class='g'><span>Mémoire des gros gagnants et des flops</span><b class='mono'>9 %</b><div class='bar'><i style='width:16%'></i></div></div>
+<div class='g'><span>Copies et clins d&#x27;oeil</span><b class='mono'>3 %</b><div class='bar'><i style='width:5%'></i></div></div>
+<div class='g'><span>Tweet (compte, contenu, réponse, liens au nom)</span><b class='mono'>2 %</b><div class='bar'><i style='width:4%'></i></div></div></div>
+</section>
+
+<section>
+  <h2>Est-ce qu'il trie bien ?</h2>
+  <p>Les coins des heures de test, rangés en 10 tranches selon le score du modèle. Barres : part de coins gagnants dans chaque tranche.</p>
+  <div class="box"><svg viewBox="0 0 640 250" role="img" aria-label="Taux de gagnants par tranche de score"><line x1="40" x2="600" y1="180.0" y2="180.0" class="grid"/><text x="34" y="184.0" class="ax" text-anchor="end">0 %</text><line x1="40" x2="600" y1="140.0" y2="140.0" class="grid"/><text x="34" y="144.0" class="ax" text-anchor="end">2 %</text><line x1="40" x2="600" y1="100.0" y2="100.0" class="grid"/><text x="34" y="104.0" class="ax" text-anchor="end">4 %</text><line x1="40" x2="600" y1="60.0" y2="60.0" class="grid"/><text x="34" y="64.0" class="ax" text-anchor="end">6 %</text><rect x="46.0" y="170.0" width="44.0" height="10.0" class="b0"/><text x="68.0" y="196" class="ax" text-anchor="middle">1</text><text x="68.0" y="164.0" class="val" text-anchor="middle">0.5</text><rect x="102.0" y="162.0" width="44.0" height="18.0" class="b0"/><text x="124.0" y="196" class="ax" text-anchor="middle">2</text><text x="124.0" y="156.0" class="val" text-anchor="middle">0.9</text><rect x="158.0" y="150.0" width="44.0" height="30.0" class="b0"/><text x="180.0" y="196" class="ax" text-anchor="middle">3</text><text x="180.0" y="144.0" class="val" text-anchor="middle">1.5</text><rect x="214.0" y="142.0" width="44.0" height="38.0" class="b0"/><text x="236.0" y="196" class="ax" text-anchor="middle">4</text><text x="236.0" y="136.0" class="val" text-anchor="middle">1.9</text><rect x="270.0" y="100.0" width="44.0" height="80.0" class="b0"/><text x="292.0" y="196" class="ax" text-anchor="middle">5</text><text x="292.0" y="94.0" class="val" text-anchor="middle">4.0</text><rect x="326.0" y="116.0" width="44.0" height="64.0" class="b0"/><text x="348.0" y="196" class="ax" text-anchor="middle">6</text><text x="348.0" y="110.0" class="val" text-anchor="middle">3.2</text><rect x="382.0" y="92.0" width="44.0" height="88.0" class="b0"/><text x="404.0" y="196" class="ax" text-anchor="middle">7</text><text x="404.0" y="86.0" class="val" text-anchor="middle">4.4</text><rect x="438.0" y="112.0" width="44.0" height="68.0" class="b0"/><text x="460.0" y="196" class="ax" text-anchor="middle">8</text><text x="460.0" y="106.0" class="val" text-anchor="middle">3.4</text><rect x="494.0" y="78.0" width="44.0" height="102.0" class="b0"/><text x="516.0" y="196" class="ax" text-anchor="middle">9</text><text x="516.0" y="72.0" class="val" text-anchor="middle">5.1</text><rect x="550.0" y="60.0" width="44.0" height="120.0" class="b1"/><text x="572.0" y="196" class="ax" text-anchor="middle">10</text><text x="572.0" y="54.0" class="val" text-anchor="middle">6.0</text><text x="320.0" y="242" class="ax" text-anchor="middle">tranche de score (1 = les 10 % les moins bien notés, 10 = les mieux notés)</text></svg></div>
+  <p>Le tri marche : la tranche la mieux notée contient 6 % de gagnants, la moins bien notée 0,5 %, douze fois moins. Mais dans toutes les tranches, la perte moyenne par coin reste entre −0,005 et −0,009 SOL. Les frais (2,5 % aller-retour plus environ 0,001 SOL de transactions) et les nombreux petits perdants mangent les gains. Le modèle ne gagne de l'argent que tout en haut, au-dessus du seuil, et sur peu de coins.</p>
+</section>
+
+<section>
+  <h2>Les 16 signaux qu'il utilisé le plus</h2>
+  <p>Pour chacun : ce que c'est, son sens (pousse vers l'achat ou le refus), et ce qu'on observe réellement sur les coins (taux de gagnants par tranche de valeur, sur les deux jours de données). Ces chiffres décrivent les données, ce ne sont pas des résultats de trading.</p>
+  <div class="sigs"><article class="sig">
+  <div class="sighead"><h3>Vrai site web</h3><span class="chip">Métadonnées et liens</span></div>
+  <div class="bar"><i style="width:100%"></i></div>
+  <p class="share">12,0 % des décisions · pousse vers l'achat quand il monte</p>
+  <p>Le coin à un site web qui n&#x27;est pas juste un lien X.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>= 0</td><td class='n'>2148</td><td class='n'>2,9 %</td></tr><tr><td>= 1</td><td class='n'>4135</td><td class='n'>4,8 %</td></tr></table></div>
+  <p class="seen">Les coins avec un vrai site gagnent 1,7 fois plus souvent (4,8 % contre 2,9 %). C&#x27;est le signal le plus utilisé : un site demande un minimum d&#x27;effort, ce que les lancements jetables n&#x27;ont pas.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Coins lances par le créateur en 6 h</h3><span class="chip">Créateur</span></div>
+  <div class="bar"><i style="width:95%"></i></div>
+  <p class="share">11,4 % des décisions · pousse vers le refus quand il monte</p>
+  <p>Combien de coins la même adresse a lancés dans les 6 heures précédentes.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>0 à 53</td><td class='n'>4182</td><td class='n'>6,0 %</td></tr><tr><td>53 à 483</td><td class='n'>2101</td><td class='n'>0,5 %</td></tr></table></div>
+  <p class="seen">Au-delà d&#x27;environ 50 coins en 6 h, le taux de gagnants tombe à 0,5 % (contre 6 %). Ce sont des robots qui lancent des coins à la chaîne. Le modèle les écarte fortement.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Coins lances par le créateur en 1 h</h3><span class="chip">Créateur</span></div>
+  <div class="bar"><i style="width:50%"></i></div>
+  <p class="share">6,0 % des décisions · pousse vers le refus quand il monte</p>
+  <p>La même mesure sur la dernière heure.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>0 à 35</td><td class='n'>4187</td><td class='n'>6,1 %</td></tr><tr><td>35 à 285</td><td class='n'>2096</td><td class='n'>0,2 %</td></tr></table></div>
+  <p class="seen">Même lecture : plus de 35 coins dans l&#x27;heure, 0,2 % de gagnants. Les deux mesures se completent.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Axe de sens n°4 du texte</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:32%"></i></div>
+  <p class="share">3,8 % des décisions · pousse vers l'achat quand il monte</p>
+  <p>Le texte du coin (nom, description, tweet) est transforme en coordonnées de sens par l&#x27;IA de langage ; c&#x27;est l&#x27;une de ces coordonnées. Elle n&#x27;a pas de nom simple.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>-0,157 a -0,0427</td><td class='n'>2094</td><td class='n'>3,7 %</td></tr><tr><td>-0,0427 à 0,0149</td><td class='n'>2094</td><td class='n'>4,3 %</td></tr><tr><td>0,0149 à 0,421</td><td class='n'>2095</td><td class='n'>4,4 %</td></tr></table></div>
+  <p class="seen">Effet faible mais régulier : 4,4 % de gagnants dans le tiers haut contre 3,7 % dans le tiers bas. Le modèle s&#x27;en sert pour reconnaître des familles de narratives.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Gravité du tweet</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:31%"></i></div>
+  <p class="share">3,8 % des décisions · pousse vers l'achat quand il monte</p>
+  <p>Le tweet parle-t-il d&#x27;une actualité majeure ou d&#x27;une anecdote ? Mesuré par ressemblance à des phrases types.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>-0,0277 a -0,00389</td><td class='n'>884</td><td class='n'>2,6 %</td></tr><tr><td>-0,00389 à 0,00427</td><td class='n'>881</td><td class='n'>3,9 %</td></tr><tr><td>0,00427 à 0,0427</td><td class='n'>888</td><td class='n'>2,8 %</td></tr></table></div>
+  <p class="seen">58 % des coins n&#x27;ont pas de tweet lu. Parmi les autres, les tweets « moyens » font mieux (3,9 %) que les très graves ou les très anecdotiques (2,6-2,8 %).</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Âge du gros gagnant le plus proche</h3><span class="chip">Mémoire des gros gagnants et des flops</span></div>
+  <div class="bar"><i style="width:27%"></i></div>
+  <p class="share">3,2 % des décisions · effet en nuances</p>
+  <p>Quand le coin ressemble à un ancien gros gagnant, il y a combien de jours que ce gagnant est sorti.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>1 à 638</td><td class='n'>2094</td><td class='n'>3,9 %</td></tr><tr><td>638 à 657</td><td class='n'>2094</td><td class='n'>4,8 %</td></tr><tr><td>657 à 775</td><td class='n'>2095</td><td class='n'>3,7 %</td></tr></table></div>
+  <p class="seen">Les gagnants les plus proches viennent surtout de MemeTrans (fin 2024 - début 2025). L&#x27;effet est faible pour l&#x27;instant ; il deviendra plus parlant quand nos 90 derniers jours seront importés.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Ressemblance a TES bons exemples</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:23%"></i></div>
+  <p class="share">2,7 % des décisions · pousse vers l'achat quand il monte</p>
+  <p>Le coin ressemble-t-il plus à tes coins notés 👍 qu&#x27;à tes coins notés 👎 (texte et image).</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>-0,172 a -0,0141</td><td class='n'>2094</td><td class='n'>3,5 %</td></tr><tr><td>-0,0141 à 0,00527</td><td class='n'>2094</td><td class='n'>4,0 %</td></tr><tr><td>0,00527 à 0,307</td><td class='n'>2095</td><td class='n'>4,8 %</td></tr></table></div>
+  <p class="seen">Tiers le plus proche de tes 👍 : 4,8 % de gagnants, contre 3,5 % pour le tiers le plus proche de tes 👎. Tes annotations servent vraiment.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Coins similaires dans l&#x27;heure</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:19%"></i></div>
+  <p class="share">2,2 % des décisions · pousse vers le refus quand il monte</p>
+  <p>Combien de coins au sens très proche sont sortis dans l&#x27;heure précédente.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>0 à 15</td><td class='n'>2079</td><td class='n'>4,7 %</td></tr><tr><td>15 à 64</td><td class='n'>2093</td><td class='n'>4,5 %</td></tr><tr><td>64 à 332</td><td class='n'>2111</td><td class='n'>3,2 %</td></tr></table></div>
+  <p class="seen">Narrative saturée (plus de 64 copies dans l&#x27;heure) : 3,2 % de gagnants contre 4,7 % quand le sujet est encore peu exploité. C&#x27;est la règle du guide que tu avais colle : trop de concurrents, l&#x27;audience se divise.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Axe n°1 de l&#x27;image</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:18%"></i></div>
+  <p class="share">2,2 % des décisions · pousse vers le refus quand il monte</p>
+  <p>L&#x27;image est transformée en coordonnées par l&#x27;IA visuelle ; c&#x27;est la première.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>-0,405 a -0,0983</td><td class='n'>2075</td><td class='n'>5,3 %</td></tr><tr><td>-0,0983 à 0,121</td><td class='n'>2075</td><td class='n'>3,9 %</td></tr><tr><td>0,121 à 0,403</td><td class='n'>2076</td><td class='n'>3,2 %</td></tr></table></div>
+  <p class="seen">5,3 % de gagnants à un bout de l&#x27;axe contre 3,2 % à l&#x27;autre : le modèle a repéré un style d&#x27;image qui marche mieux. On ne peut pas le nommer directement.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Ressemblance à ta catégorie « politique »</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:16%"></i></div>
+  <p class="share">2,0 % des décisions · pousse vers l'achat quand il monte</p>
+  <p>Proximite avec les coins que tu as tagués « politique ».</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>0,55 à 0,814</td><td class='n'>1664</td><td class='n'>4,7 %</td></tr><tr><td>0,814 à 0,849</td><td class='n'>1663</td><td class='n'>5,7 %</td></tr><tr><td>0,849 à 1</td><td class='n'>1665</td><td class='n'>3,2 %</td></tr></table></div>
+  <p class="seen">Le milieu fonctionne le mieux (5,7 %) ; les coins très politiques font moins bien (3,2 %).</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Thème célébrité</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:13%"></i></div>
+  <p class="share">1,6 % des décisions · pousse vers le refus quand il monte</p>
+  <p>Le nom ou la description parle-t-il d&#x27;une célébrité, d&#x27;un influenceur ?</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>-0,0298 a -0,00411</td><td class='n'>2094</td><td class='n'>3,5 %</td></tr><tr><td>-0,00411 à 0,0034</td><td class='n'>2093</td><td class='n'>5,0 %</td></tr><tr><td>0,0034 à 0,0355</td><td class='n'>2094</td><td class='n'>3,8 %</td></tr></table></div>
+  <p class="seen">Effet modeste : 5,0 % au milieu contre 3,5 % pour les moins concernés.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Thème actualité mondiale</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:13%"></i></div>
+  <p class="share">1,6 % des décisions · effet en nuances</p>
+  <p>Le coin parle-t-il d&#x27;une actualité mondiale (guerre, géopolitique) ?</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>-0,0132 à 0,0064</td><td class='n'>2094</td><td class='n'>4,5 %</td></tr><tr><td>0,0064 à 0,0123</td><td class='n'>2093</td><td class='n'>4,3 %</td></tr><tr><td>0,0123 à 0,0636</td><td class='n'>2094</td><td class='n'>3,6 %</td></tr></table></div>
+  <p class="seen">Plus le coin est « actu mondiale », un peu moins il gagne (3,6 % contre 4,5 %), mais il perd moins quand il perd.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Âge de l&#x27;original copie</h3><span class="chip">Copies et clins d&#x27;oeil</span></div>
+  <div class="bar"><i style="width:13%"></i></div>
+  <p class="share">1,5 % des décisions · pousse vers l'achat quand il monte</p>
+  <p>Quand le coin reprend un nom, un ticker, une image ou un lien déjà vus : il y a combien de minutes que l&#x27;original est sorti.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>0,0167 à 55,6</td><td class='n'>1551</td><td class='n'>3,0 %</td></tr><tr><td>55,6 à 583</td><td class='n'>1550</td><td class='n'>3,9 %</td></tr><tr><td>583 à 7,99e+03</td><td class='n'>1551</td><td class='n'>4,8 %</td></tr></table></div>
+  <p class="seen">Reprendre une idée vieille de plus de 10 h : 4,8 % de gagnants. Copier un coin sorti il y a moins d&#x27;une heure : 3,0 %. Le clin d&#x27;oeil à un ancien succes marche mieux que le vamp immediat, comme tu le pensais.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Axe de sens n°14 du texte</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:12%"></i></div>
+  <p class="share">1,5 % des décisions · pousse vers l'achat quand il monte</p>
+  <p>Une autre coordonnée de sens du texte.</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>-0,242 a -0,016</td><td class='n'>2093</td><td class='n'>4,5 %</td></tr><tr><td>-0,016 à 0,0179</td><td class='n'>2095</td><td class='n'>4,4 %</td></tr><tr><td>0,0179 à 0,203</td><td class='n'>2095</td><td class='n'>3,5 %</td></tr></table></div>
+  <p class="seen">Effet faible, dans l&#x27;autre sens que l&#x27;axe n°4.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Cohérence image / texte</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:12%"></i></div>
+  <p class="share">1,4 % des décisions · pousse vers le refus quand il monte</p>
+  <p>L&#x27;image illustre-t-elle ce que dit le nom et la description ?</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>0,156 à 0,242</td><td class='n'>2075</td><td class='n'>3,9 %</td></tr><tr><td>0,242 à 0,274</td><td class='n'>2075</td><td class='n'>4,3 %</td></tr><tr><td>0,274 à 0,445</td><td class='n'>2076</td><td class='n'>4,2 %</td></tr></table></div>
+  <p class="seen">Effet presque nul pour l&#x27;instant.</p>
+</article>
+<article class="sig">
+  <div class="sighead"><h3>Ressemblance à ta catégorie « tweet viral »</h3><span class="chip">Narrative</span></div>
+  <div class="bar"><i style="width:12%"></i></div>
+  <p class="share">1,4 % des décisions · effet en nuances</p>
+  <p>Proximite avec les coins que tu as tagués « tweet viral ».</p>
+  <div class="tw"><table><tr><th>Valeur</th><th class="n">Coins</th><th class="n">Gagnants</th></tr><tr><td>0,457 à 0,679</td><td class='n'>2094</td><td class='n'>4,3 %</td></tr><tr><td>0,679 à 0,706</td><td class='n'>2094</td><td class='n'>4,0 %</td></tr><tr><td>0,706 à 0,833</td><td class='n'>2095</td><td class='n'>4,1 %</td></tr></table></div>
+  <p class="seen">Effet presque nul pour l&#x27;instant.</p>
+</article></div>
+</section>
+
+<section>
+  <h2>Ses erreurs</h2>
+  <div class="tw"><table>
+    <tr><th>Achats ratés</th><th>Score</th><th>Résultat</th></tr>
+    <tr><td>The Musk</td><td class="n">0,68</td><td>stop-loss, −0,053 SOL. Nom de célébrité très repris, le modèle a été trop confiant.</td></tr>
+    <tr><td>SENATOR</td><td class="n">0,65</td><td>rien ne s'est passe, vendu à 2 min (−0,004 SOL)</td></tr>
+    <tr><td>ANON COIN</td><td class="n">0,65</td><td>rien ne s'est passe, vendu à 2 min (−0,004 SOL)</td></tr>
+  </table></div>
+  <p style="margin-top:10px">Les plus gros coins qu'il n'a pas achetés : Bundless (×2), Welcome3hq (×1,9), KEKANGELO et John Alexander (×1,7), GTA VI, Lana, Let Chaos Reign et Chungus (×1,6). GTA VI fait partie de la vague GTA que tu avais annotée : avec plus d'exemples dans cette veine, le modèle la reconnaîtra mieux.</p>
+</section>
+
+<section>
+  <h2>Ce qu'il faut en retenir</h2>
+  <ul>
+    <li><b>La narrative seule tient la route.</b> Elle trie les coins aussi bien que le modèle complet et elle a donné le premier champion. Les signaux qui comptent sont simples et parlants : vrai site, créateur non robot, ressemblance à tes bons exemples, narrative pas encore saturée, clin d'oeil plutot que copie immediate.</li>
+    <li><b>Ce n'est pas encore rentable de facon prouvée.</b> 12 achats de test, c'est trop peu. Il faut plusieurs jours pour savoir si le +0,04 SOL tient.</li>
+    <li><b>Le tweet est sous-utilisé</b> à cause du trou de ce matin. A surveiller demain, avec une journée entière de tweets lus.</li>
+    <li><b>La mémoire va grossir.</b> L'import de nos 90 derniers jours mesure le plus haut de 54 839 migrations naturelles sur GeckoTerminal, à environ 20 par minute : il faudra environ deux jours pour finir. 57 gros gagnants sur les 623 premiers vérifiés.</li>
+    <li><b>Tes annotations comptent</b> : la ressemblance à tes 👍 est l'un des signaux les plus utilisés. Tes 30 à 40 exemples prévus auront un effet direct.</li>
+  </ul>
+</section>
+
+<footer>Données : modèle 20261026-220456 (registre des modèles), contributions calculées sur 68 613 analyses de 6 283 coins (25-26 octobre), journal du paper trader depuis 18 h 14. Mémoire : 3 837 gros gagnants et 10 728 flops, dont le dataset MemeTrans (MELT, CC BY-NC 4.0).</footer>
+</main>

@@ -1,0 +1,251 @@
+<title>PumpML, rapport de nuit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Mise en page : un rapport de laboratoire, une colonne de lecture, tableaux en pleine largeur */
+:root {
+  --bg: #f6f7f5; --panel: #ffffff; --fg: #17201e; --muted: #5d6b67; --line: #dfe5e2;
+  --accent: #0e7c6b; --good: #16794a; --bad: #b4372f; --warn: #a96a07;
+  --good-bg: #e3f3ea; --bad-bg: #f9e5e3; --warn-bg: #fbf0dc; --neutral-bg: #eceff0;
+  --display: "Archivo", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1514; --panel: #161e1c; --fg: #e4ebe8; --muted: #93a39e; --line: #26312e;
+  --accent: #3cc4ac; --good: #5fd39a; --bad: #f08a80; --warn: #e5b45a;
+  --good-bg: #13301f; --bad-bg: #3a1a17; --warn-bg: #3a2b0f; --neutral-bg: #222b29; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1514; --panel: #161e1c; --fg: #e4ebe8; --muted: #93a39e; --line: #26312e;
+  --accent: #3cc4ac; --good: #5fd39a; --bad: #f08a80; --warn: #e5b45a;
+  --good-bg: #13301f; --bad-bg: #3a1a17; --warn-bg: #3a2b0f; --neutral-bg: #222b29; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--display);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 64px }
+main { max-width: 960px; margin: 0 auto; display: grid; gap: 40px }
+header { display: grid; gap: 8px; border-bottom: 2px solid var(--fg); padding-bottom: 20px }
+.kicker { font: 600 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent) }
+h1 { font-size: clamp(30px, 5vw, 44px); line-height: 1.1; margin: 0; font-weight: 800; text-wrap: balance }
+h2 { font-size: 22px; margin: 0 0 12px; font-weight: 800; text-wrap: balance }
+h3 { font-size: 16px; margin: 18px 0 6px }
+p { margin: 0 0 12px; max-width: 70ch } p.lead { font-size: 18px }
+section { display: grid; gap: 4px; min-width: 0 }
+.verdict { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0 }
+.box.ok { border-left: 4px solid var(--good) } .box.no { border-left: 4px solid var(--bad) } .box.decide { border-left: 4px solid var(--warn) }
+.box h3 { margin-top: 0 }
+.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden }
+.num { background: var(--panel); padding: 14px 16px; display: grid; gap: 2px }
+.num b { font: 600 26px/1.1 var(--mono); font-variant-numeric: tabular-nums }
+.num span { color: var(--muted); font-size: 13px }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel) }
+table { width: 100%; border-collapse: collapse; font-size: 14px }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font: 600 11px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg) }
+tr:last-child td { border-bottom: 0 }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap }
+tr.pick td { background: var(--good-bg) }
+.mono, code { font-family: var(--mono); font-size: 13px }
+.sym { color: var(--muted); font: 12px var(--mono); margin-left: 6px }
+.tags { color: var(--accent); font-size: 13px; white-space: nowrap }
+.why { color: var(--muted); font-size: 13px; min-width: 260px }
+.chip { display: inline-block; font: 600 11px/1 var(--mono); padding: 4px 8px; border-radius: 999px; white-space: nowrap }
+.chip.good { background: var(--good-bg); color: var(--good) } .chip.bad { background: var(--bad-bg); color: var(--bad) }
+.chip.neutral { background: var(--neutral-bg); color: var(--muted) }
+.pos { color: var(--good) } .neg { color: var(--bad) }
+ol, ul { margin: 0; padding-left: 22px; display: grid; gap: 8px; max-width: 75ch }
+.signal { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: baseline }
+.bar { height: 8px; border-radius: 4px; background: var(--neutral-bg); overflow: hidden; grid-column: 1 / -1 }
+.bar i { display: block; height: 100%; background: var(--accent) }
+.bar i.low { background: var(--bad) }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px }
+</style>
+<main>
+<header>
+  <div class="kicker">Nuit du 25 au 26 octobre 2026 · 22 h 40 → 9 h 52</div>
+  <h1>PumpML : rapport de nuit</h1>
+  <p class="lead">Le système a tourné toute la nuit sans interruption. La collecte et la simulation sont maintenant fiables et vérifiées. L'IA repère les coins qui bougent, mais ne gagne pas encore d'argent après frais.</p>
+</header>
+
+<section>
+  <h2>En bref</h2>
+  <div class="verdict">
+    <div class="box ok"><h3>Ce qui est solide</h3><p>Toutes les créations pump.fun sont vues, au lieu de 42 % hier soir. Les trades des coins suivis sont complets et horodatés sur la blockchain. La simulation colle au prix Jupiter réel (écart de 0,003 SOL par trade), et les frais pump.fun (1,25 % par sens) ont été vérifiés sur la chaîne.</p></div>
+    <div class="box no"><h3>Ce qui ne marche pas encore</h3><p>Aucun modèle ne bat « acheter tout » en argent. Les coins choisis gagnent 2 à 4 fois plus souvent que la moyenne, mais perdent plus gros quand ils perdent. Aucune tranche de score n'est rentable pour l'instant.</p></div>
+    <div class="box decide"><h3>Ce que tu dois décider</h3><p>Le budget Helius (38 % des coins suivis, ou crédits en plus), la lecture X en payant, et l'ouverture du trading après migration. Le détail est en bas de page.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>La nuit en chiffres</h2>
+  <div class="nums">
+    <div class="num"><b>12 982</b><span>coins vus</span></div>
+    <div class="num"><b>617 673</b><span>trades enregistrés</span></div>
+    <div class="num"><b>15</b><span>entraînements, aucun promu</span></div>
+    <div class="num"><b>42</b><span>coins qui ont percé importés</span></div>
+    <div class="num"><b>425</b><span>positions au prix Jupiter</span></div>
+    <div class="num"><b class="neg">−6,77</b><span>SOL en paper trading</span></div>
+    <div class="num"><b>13</b><span>commits</span></div>
+    <div class="num"><b>127 k</b><span>crédits Helius depuis minuit</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>Problèmes trouvés et corrigés</h2>
+  <div class="tw"><table>
+    <tr><th>Problème</th><th>Effet</th><th>Correctif</th><th>Commit</th></tr>
+    <tr><td>PumpPortal ne transmettait que 42 % des créations</td><td>L'IA ignorait plus de la moitié des coins (13,8 par minute vus contre 33 réels)</td><td>Abonnement Helius au compte d'autorité de mint, présent dans toutes les créations : <b>100 %</b> (148 sur 148)</td><td class="mono">9a613a0</td></tr>
+    <tr><td>La plupart des coins récents qui ont percé ont migré dès leur création</td><td>Le créateur ou un groupe achète toute la courbe d'un coup : ces coins ne sont jamais achetables sur la courbe, et leur import échouait</td><td>Import « narratif seul » : nom, description, image, lien X et date, pour la bibliothèque de narratives</td><td class="mono">0dfb981</td></tr>
+    <tr><td>Le compteur de crédits Helius repartait de zéro à chaque redémarrage</td><td>Le garde-fou du budget journalier ne voyait qu'une partie de la consommation</td><td>Compteur conservé entre les redémarrages</td><td class="mono">000b870</td></tr>
+    <tr><td>Avec 100 % des créations, le suivi complet coûterait environ 770 000 crédits par jour</td><td>Au-delà du plan Developer (environ 333 000 par jour)</td><td>Suivi sur un tirage aléatoire de 38 % des coins (environ 230 000 à 290 000 par jour) ; toutes les créations restent vues</td><td class="mono">0a837b9 · 8fddc54</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Changements de la stratégie et de l'IA</h2>
+  <div class="tw"><table>
+    <tr><th>Changement</th><th>Pourquoi</th><th>Commit</th></tr>
+    <tr><td>Objectif de vente passé de +100 % à +50 %</td><td>Sur les mêmes données : 4,5 % de gagnants au lieu de 3,3 %, et un modèle à −0,28 SOL au lieu de −0,67 SOL</td><td class="mono">07e3217</td></tr>
+    <tr><td>Vente après 2 min si moins de +10 %</td><td>Sur 9 stratégies de sortie testées, la meilleure en pratique : 9 % de pertes en moins, et des positions de 3 à 5 min au lieu de 20 à 26</td><td class="mono">67bc349</td></tr>
+    <tr><td>Objectif d'apprentissage pondéré par l'ampleur du gain ou de la perte</td><td>Le modèle « gagne ou pas » choisissait des coins volatils qui perdent gros ; cette version est la plus alignée sur l'argent</td><td class="mono">67bc349</td></tr>
+    <tr><td>Activité du créateur sur 1 h et 6 h, tous coins confondus</td><td>Les créateurs en série sont le signal le plus fort, et beaucoup de leurs coins étaient exclus du comptage</td><td class="mono">2503bed</td></tr>
+    <tr><td>Cache des features lié à la stratégie, scripts de découverte et d'import des coins qui ont percé</td><td>Changer la stratégie doit recalculer les résultats ; la découverte des coins qui ont percé est maintenant automatique</td><td class="mono">07e3217</td></tr>
+    <tr><td>Annotations : 41 coins, notes par adresse</td><td>Plusieurs coins partagent le même ticker (« GTA »)</td><td class="mono">963f356</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Ce que disent les données</h2>
+  <p>Analyse sur 3 959 coins résolus (5,7 % gagnants à au moins un point d'analyse), avec le contexte complet.</p>
+  <div class="verdict">
+    <div class="box"><h3>Créateur</h3>
+      <div class="signal"><span>Premier coin du créateur</span><b class="mono pos">11,0 %</b><div class="bar"><i style="width:41%"></i></div></div>
+      <div class="signal"><span>Créateur en série (12 coins ou plus)</span><b class="mono neg">0,6 %</b><div class="bar"><i class="low" style="width:2%"></i></div></div>
+    </div>
+    <div class="box"><h3>Snipers (premiers blocs)</h3>
+      <div class="signal"><span>Aucun</span><b class="mono">5,2 %</b><div class="bar"><i style="width:19%"></i></div></div>
+      <div class="signal"><span>3 à 5</span><b class="mono">17,9 %</b><div class="bar"><i style="width:67%"></i></div></div>
+      <div class="signal"><span>6 ou plus</span><b class="mono pos">26,6 %</b><div class="bar"><i style="width:100%"></i></div></div>
+    </div>
+    <div class="box"><h3>Copies</h3>
+      <div class="signal"><span>Copie d'un original qui a fait x2+</span><b class="mono pos">8,8 %</b><div class="bar"><i style="width:33%"></i></div></div>
+      <div class="signal"><span>Original</span><b class="mono">6,7 %</b><div class="bar"><i style="width:25%"></i></div></div>
+      <div class="signal"><span>Copie d'un original qui n'a pas marché</span><b class="mono neg">4,4 %</b><div class="bar"><i class="low" style="width:17%"></i></div></div>
+    </div>
+  </div>
+  <h3>Autres constats</h3>
+  <ul>
+    <li><b>Précocité.</b> Acheter tous les coins à 5 s donne 4,7 % de gagnants, contre 1,3 % à 7 min. Les gains se font tôt.</li>
+    <li><b>Thèmes.</b> Humour (7,4 %), animal (7,1 %) et célébrité (10 %, sur peu de coins) font mieux que la moyenne. Crypto, actu mondiale, drame et viral font moins bien. Les narratives légères battent les actus graves (5,7 % contre 3,9 %).</li>
+    <li><b>Tweets.</b> Un vieux tweet (plus de 3 min au lancement) ne gagne que 2,0 % du temps, contre 7,7 % pour un lien vers un profil X. Correction (11 h) : 42 % des coins ont un lien vers un tweet et 77 % des tweets frais sont bien lus, environ 8 s après la création. Le manque de données vient surtout du point d'analyse à 5 s, trop tôt pour le tweet.</li>
+    <li><b>Copies.</b> 56 à 65 % des coins testés sont des copies d'un coin sorti avant.</li>
+    <li><b>Sous-ensembles rentables.</b> Sur 1 326 combinaisons de deux critères, seules 13 ont un PnL positif, et elles ne portent que sur 39 à 58 coins. Toutes ont le même profil : achat après une chute (le créateur a vendu, plus de 30 % de baisse). C'est une hypothèse de rachat sur repli à surveiller.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Stratégies de sortie comparées</h2>
+  <p>PnL moyen par achat de 0,1 SOL, simulé sur 5 140 coins achetés au premier point d'analyse, et sur les 850 coins à 3 snipers ou plus.</p>
+  <div class="tw"><table>
+    <tr><th>Stratégie</th><th class="n">Tous les coins</th><th class="n">3+ snipers</th><th class="n">Durée</th></tr>
+    <tr><td>TP +50 / SL −40 / 30 min (hier soir)</td><td class="n neg">−0,0096</td><td class="n neg">−0,0107</td><td class="n">20-26 min</td></tr>
+    <tr><td>TP +100 / SL −40 / 30 min</td><td class="n neg">−0,0100</td><td class="n neg">−0,0121</td><td class="n">21-27 min</td></tr>
+    <tr class="pick"><td><b>TP +50 / SL −40 + vente à 2 min si moins de +10 %</b> (adoptée)</td><td class="n neg">−0,0087</td><td class="n neg">−0,0097</td><td class="n">3-5 min</td></tr>
+    <tr><td>SL −25 + vente à 2 min</td><td class="n neg">−0,0086</td><td class="n neg">−0,0091</td><td class="n">~3 min</td></tr>
+    <tr><td>Stop suiveur sans plafond + vente à 2 min</td><td class="n neg">−0,0087</td><td class="n neg">−0,0092</td><td class="n">3-4 min</td></tr>
+  </table></div>
+  <p style="margin-top:10px">Aucune stratégie de sortie ne rend le système rentable à elle seule. Les pertes viennent des coins choisis et des frais (2,5 % aller-retour plus environ 0,001 SOL de transactions).</p>
+</section>
+
+<section>
+  <h2>Les modèles</h2>
+  <p>Chaque heure, le modèle est réentraîné de zéro sur tout l'historique, puis testé sur les coins les plus récents, qu'il n'a jamais vus. Voici les modèles du matin, testés sur environ 1 600 à 1 700 coins.</p>
+  <div class="tw"><table>
+    <tr><th>Modèle</th><th class="n">Achats</th><th class="n">PnL</th><th class="n">Par achat</th><th class="n">Tout acheter, par coin</th><th class="n">Gagnants</th></tr>
+    <tr><td class="mono">4 h 59</td><td class="n">127</td><td class="n neg">−1,44</td><td class="n neg">−0,0113</td><td class="n neg">−0,0109</td><td class="n">20 %</td></tr>
+    <tr><td class="mono">5 h 59</td><td class="n">49</td><td class="n neg">−0,46</td><td class="n neg">−0,0095</td><td class="n neg">−0,0111</td><td class="n">4 %</td></tr>
+    <tr><td class="mono">7 h 00</td><td class="n">62</td><td class="n neg">−0,69</td><td class="n neg">−0,0112</td><td class="n neg">−0,0110</td><td class="n">26 %</td></tr>
+    <tr><td class="mono">8 h 00</td><td class="n">3</td><td class="n pos">+0,08</td><td class="n pos">+0,026</td><td class="n neg">−0,0111</td><td class="n">67 %</td></tr>
+    <tr><td class="mono">9 h 00</td><td class="n">37</td><td class="n neg">−0,33</td><td class="n neg">−0,0088</td><td class="n neg">−0,0115</td><td class="n">–</td></tr>
+  </table></div>
+  <p style="margin-top:10px">Le modèle de 8 h 00 est le premier à gagner sur son test, mais sur 3 achats seulement : c'est du bruit. Le garde-fou (10 achats minimum) l'a empêché d'être promu. Comparés au même objectif sur les mêmes 1 380 coins, aucun objectif d'apprentissage (binaire, pondéré, régression) ne bat « acheter tout » par achat.</p>
+</section>
+
+<section>
+  <h2>Paper trading au prix Jupiter</h2>
+  <div class="tw"><table>
+    <tr><th>Sortie (positions depuis 2 h 58)</th><th class="n">Réel Jupiter</th><th class="n">Simulation</th><th class="n">Écart</th></tr>
+    <tr><td>Vente à 2 min (78)</td><td class="n neg">−0,0161</td><td class="n neg">−0,0169</td><td class="n">+0,0008</td></tr>
+    <tr><td>Stop-loss (33)</td><td class="n neg">−0,0486</td><td class="n neg">−0,0288</td><td class="n neg">−0,0198</td></tr>
+    <tr><td>Objectif atteint (14)</td><td class="n pos">+0,0746</td><td class="n pos">+0,0575</td><td class="n pos">+0,0172</td></tr>
+    <tr><td><b>Ensemble (131)</b></td><td class="n neg">−2,02 SOL</td><td class="n neg">−1,67 SOL</td><td class="n">−0,0026 / trade</td></tr>
+  </table></div>
+  <p style="margin-top:10px">Sur toute la nuit : 425 positions, −6,77 SOL, 14,6 % gagnantes. Depuis la vente à 2 min : 241 positions, −0,018 SOL par position. Les stop-loss sont pires en direct, parce que la cotation toutes les 10 s laisse le prix glisser sous −40 % avant la vente.</p>
+</section>
+
+<section>
+  <h2>Coins qui ont percé : importés et annotés</h2>
+  <p>42 coins pump.fun passés à plus de 200 000 $ de market cap (GeckoTerminal, pools PumpSwap de moins de 120 jours), plus 5 grands viraux. Les valorisations artificielles (de 230 à 650 M$ de market cap sans volume) ont été écartées. Chaque catégorie des coins à reproduire devient un filtre de narrative pour l'IA.</p>
+  <div class="tw"><table>
+    <tr><th>Coin</th><th>Avis</th><th>Catégories</th><th>Narrative et raison de la viralité</th><th>Import</th></tr>
+    <tr><td><b>Catecoin</b><span class='sym'>$CATE</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>animal · meme / humour</td><td class='why'>Catecoin : chat, meme simple ; a tenu plus de 90 jours (communaute durable).</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Big Titty Coin</b><span class='sym'>$BTC</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour</td><td class='why'>Ticker &#x27;BTC&#x27; detourne (Big Titty Coin) : blague provocante qui joue sur le Bitcoin.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Dacity Coin</b><span class='sym'>$Dacity</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour</td><td class='why'>Coin a forte traction (plusieurs millions de market cap), lance hors courbe.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Flop Labs</b><span class='sym'>$FLOP</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour</td><td class='why'>Nom autoderisoire (Flop Labs) : humour assume.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Musk</b><span class='sym'>$Musk</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>celebrite / influenceur</td><td class='why'>Elon Musk : celebrite la plus liee aux memecoins, nom direct.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Remus</b><span class='sym'>$REMUS</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour · communaute / culte</td><td class='why'>&#x27;Mascotte officielle du FOMO&#x27; avec date annoncee : mascotte + evenement.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>COTE KOIN</b><span class='sym'>$COTE</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour</td><td class='why'>Coin a forte traction avec compte X dedie, lance hors courbe.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>T1k0</b><span class='sym'>$T1K0</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>ia / tech · communaute / culte</td><td class='why'>&#x27;Experience de survie IA 24/7&#x27; : un robot echoue, suivi en direct -&gt; narrative agent IA + feuilleton a suivre.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>GTA Online 6</b><span class='sym'>$GTA 6</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>culture internet · news du jour</td><td class='why'>Vague GTA (attente de GTA VI) : jeu navigateur &#x27;GTA Online 6&#x27;, compte X dedie.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Giga Tits</b><span class='sym'>$GIGATITS</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour · culture internet</td><td class='why'>Suite de la vague &#x27;Giga Titty Ass&#x27; (GTA) : meme provocateur decline.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Peanut the Squirrel</b><span class='sym'>$Pnut</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>animal · news du jour · tweet viral</td><td class='why'>Ecureuil saisi et euthanasie par les autorites de New York (nov. 2024) : indignation nationale, reprise par Elon Musk et la presse. Histoire emotionnelle deja virale avant le coin.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>cat wif sword</b><span class='sym'>$swordcat</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>animal · meme / humour</td><td class='why'>Chat avec une epee : meta &#x27;wif&#x27; (dogwifhat) + chat, image forte et simple.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Doge Pepe</b><span class='sym'>$DOPE</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour · crypto meta</td><td class='why'>Fusion de deux memes historiques (Doge + Pepe) : nostalgie crypto, lisible en une seconde.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Cattleaxe</b><span class='sym'>$CATTLEAXE</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>animal · meme / humour</td><td class='why'>Chaton portant une hache plus lourde qu&#x27;un chevalier : image absurde et mignonne, personnage avec un compte X.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Super Intelligence SI276</b><span class='sym'>$SI276</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>ia / tech · celebrite / influenceur</td><td class='why'>Projet lie au detenteur du record mondial de QI (YoungHoon Kim) : autorite d&#x27;une personnalite + theme intelligence.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Giga Titty Ass</b><span class='sym'>$GTA</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>culture internet · news du jour</td><td class='why'>Vague GTA (attente de GTA VI) : jeu tres populaire, nom provocateur et memorable.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>███</b><span class='sym'>$███</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour · culture internet</td><td class='why'>Ticker censure ███ : curiosite et humour &#x27;interdit&#x27;, format inedit.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>GTA Dog Mascot</b><span class='sym'>$Chop</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>culture internet · animal</td><td class='why'>Chop, le chien de GTA : personnage connu de millions de joueurs, surfe sur la vague GTA.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Nigga Its Over</b><span class='sym'>$NIO</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour · culture internet</td><td class='why'>Expression deja virale sur le &#x27;normie Twitter&#x27; : phrase culte reprise en coin.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>US PRESIDENT 2028</b><span class='sym'>$PRESIDENT</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>politique</td><td class='why'>Narrative presidentielle 2028 : sujet politique americain recurrent, nom simple.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Fartcoin</b><span class='sym'>$Fartcoin</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour · ia / tech · communaute / culte</td><td class='why'>Idee lancee par Truth Terminal (blague pipi-caca), humour absurde assume, communaute tres soudee (&#x27;fart&#x27; culture). Meme simple, universel, porte par la narrative IA.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Goatseus Maximus</b><span class='sym'>$GOAT</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>ia / tech · communaute / culte</td><td class='why'>Premier meme cree par l&#x27;IA Truth Terminal, financee par Marc Andreessen : narrative &#x27;agent IA&#x27; inedite + culte autour du bot sur X.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Just a chill guy</b><span class='sym'>$CHILLGUY</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour · culture internet</td><td class='why'>&#x27;Just a chill guy&#x27; : meme du chien dessine de Phillip Banks, deja tendance massive sur TikTok (#chillguy) avant le coin. Meme deja connu du grand public.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Moo Deng</b><span class='sym'>$MOODENG</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>animal · culture internet</td><td class='why'>Bebe hippopotame pygmee du zoo Khao Kheow, deja viral sur TikTok et Instagram (videos, fan art) avant le coin. Animal mignon + phenomene social existant.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Trust in Trump</b><span class='sym'>$TIT</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>politique</td><td class='why'>&#x27;Trust in Trump&#x27; : slogan patriotique pro-Trump, compte X dedie ; narrative politique simple.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Save Bow</b><span class='sym'>$Bow</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>celebrite / influenceur · communaute / culte</td><td class='why'>&#x27;Save Bow&#x27; : les frais du coin sont reverses a un createur X (@ayakatz) via UsePaid -&gt; communaute qui soutient une personnalite.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>Grand Trump Agency</b><span class='sym'>$GTA</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>politique · culture internet</td><td class='why'>&#x27;Grand Trump Agency&#x27; : Trump (personnalite demesuree) x univers GTA, deux vagues du moment combinees.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>PMUP</b><span class='sym'>$PMUP</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>ia / tech · celebrite / influenceur</td><td class='why'>Lance sur un tweet de Shaw (@shawmakesmagic, createur d&#x27;ElizaOS / ai16z) : developpeur IA tres suivi.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>FOMO Teacher</b><span class='sym'>$TFOMO</span></td><td><span class="chip good">à reproduire</span></td><td class='tags'>meme / humour · communaute / culte</td><td class='why'>&#x27;FOMO Teacher&#x27; : personnage qui joue sur la peur de rater, compte X dedie.</td><td class='mono'>trades rejoués</td></tr>
+<tr><td><b>United Energy Reserve</b><span class='sym'>$UER</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Faux &#x27;fonds&#x27; americain (energie) : createur qui achete toute la courbe a la creation, valorisation artificielle.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>United Dividend Trust Fund</b><span class='sym'>$UDTF</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Faux &#x27;fonds de dividendes&#x27; : meme schema, nom financier serieux pour inspirer confiance.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Aura Final Boss</b><span class='sym'>$Kimchi</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>rug · communaute / culte</td><td class='why'>Monte a ~15 M$ en moins d&#x27;une heure grace au repost du cofondateur de pump.fun, puis -98 % des que le repost a ete retire (23/10/2026). Pompe artificielle par influence, gains capte par les premiers wallets.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Digital Oil Asset Supply</b><span class='sym'>$DOAS</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Faux actif petrolier : meme famille de lancements &#x27;fonds&#x27; a valorisation artificielle.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>United States Oil Exchange</b><span class='sym'>$USOE</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Faux &#x27;United States Oil Exchange&#x27; : meme famille.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>XTO</b><span class='sym'>$XTO</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Promet de &#x27;payer en $USO&#x27; (petrole) : promesse de rendement, meme famille de faux fonds.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>United Dividend Trust Fund</b><span class='sym'>$UDTF</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Faux &#x27;fonds de dividendes&#x27; : meme schema, nom financier serieux pour inspirer confiance.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>XTO</b><span class='sym'>$XTO</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Promet de &#x27;payer en $USO&#x27; (petrole) : promesse de rendement, meme famille de faux fonds.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>United States Dividend Fund</b><span class='sym'>$USDF</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Faux &#x27;United States Dividend Fund&#x27; : meme famille (relances sous plusieurs adresses).</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Apple</b><span class='sym'>$Apple</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'></td><td class='why'></td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>XTO</b><span class='sym'>$XTO</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / faux fonds</td><td class='why'>Promet de &#x27;payer en $USO&#x27; (petrole) : promesse de rendement, meme famille de faux fonds.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>NVIDIA</b><span class='sym'>$NVIDIA</span></td><td><span class="chip bad">à éviter</span></td><td class='tags'>arnaque / usurpation</td><td class='why'>Reprend la description et le compte X OFFICIELS de NVIDIA : usurpation d&#x27;une grande marque, aucun lien reel.</td><td class='mono'>narratif seul</td></tr>
+<tr><td><b>Network Coin</b><span class='sym'>$NETWORK</span></td><td><span class="chip neutral">sans avis</span></td><td class='tags'></td><td class='why'></td><td class='mono'>narratif seul</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>Décisions et prochaines étapes</h2>
+  <div class="verdict">
+    <div class="box decide"><h3>1. Budget Helius</h3><p>Suivre tous les coins coûte environ 770 000 crédits par jour. Aujourd'hui, 38 % des coins sont suivis. Pour repasser à 100 %, il faut environ 13 M de crédits en plus par mois (environ 65 $ à 5 $ le million), ou un plan supérieur.</p></div>
+    <div class="box decide"><h3>2. Données X</h3><p>Correction : 77 % des tweets frais sont déjà lus, environ 8 s après la création du coin. Le plan payant de twitterapi.io (environ 1 $ par jour) servirait surtout à aller plus vite et à absorber les pics.</p></div>
+    <div class="box decide"><h3>3. Trader après la migration</h3><p>Une partie des coins qui percent ne passe jamais par la courbe. Trader aussi sur PumpSwap via Jupiter ouvrirait ces coins à l'IA. C'est le plus gros chantier possible.</p></div>
+  </div>
+  <h3>Ce que je ferais ensuite</h3>
+  <ol>
+    <li><b>Laisser accumuler 3 à 7 jours de données.</b> Il n'y a qu'environ 230 coins gagnants à ce jour ; il en faut des milliers pour juger un modèle.</li>
+    <li><b>Tes 30 à 40 exemples annotés</b>, bons et mauvais, avec leurs catégories. Ils alimentent directement la bibliothèque de narratives.</li>
+    <li><b>Tester le rachat sur repli</b> (achat après une chute marquée) quand l'échantillon sera assez grand.</li>
+    <li><b>Une cible « gros décollage »</b> (x2 ou plus avant le stop-loss) en plus de la cible actuelle, pour apprendre à prédire les coins qui rapportent, et pas seulement ceux qui bougent.</li>
+  </ol>
+</section>
+
+<footer>Sources : journal <code>rapports/nuit-2026-10-26.md</code>, registre des modèles, <code>data/journal.db</code>, historique git depuis <code>a6343b9</code>. Aucun achat réel n'a été fait et aucune clé n'est dans git.</footer>
+</main>

@@ -1,0 +1,44 @@
+{
+ "since_ms": 1793197868831,
+ "period": {
+  "n": 172,
+  "org": 108,
+  "grp": 64,
+  "win": 3
+ },
+ "coins": [
+  {
+   "mint": "BLAytV5xTVEkYJYS1RoFR5Ypgm3JZ44CvVdZHTExpump",
+   "pool": "EdQzwtmWkH5iB5Q6KPWQbQUYo1NPaCfY3zNCpoW9NDpV",
+   "migrated_ms": 1793213371000,
+   "creator": "Dx22yswveuYSeNtMaA5AnZF7nyU9vruoCioLLpyT1vC5",
+   "created_ms": 1793206519000,
+   "curve_tx": 414,
+   "curve_s": 6852.0,
+   "block0_tx": 7,
+   "organic": 1,
+   "name": "Make Halloween Great Again",
+   "symbol": "TRUMPKIN",
+   "description": null,
+   "image_url": "https://cdn.helius-rpc.com/cdn-cgi/image//https://ipfs.io/ipfs/bafybeicpm4v3sjyfjt2elnma7fhy7f63apczrhya2ucb7slwqjcpvoqvie",
+   "image_path": "images/fame/BLAytV5xTVEkYJYS1RoFR5Ypgm3JZ44CvVdZHTExpump.jpg",
+   "step": 2,
+   "supply": 987514195.972768,
+   "peak_mcap_usd": 312852.90949590976,
+   "win_ms": 1793232000000,
+   "peak_checked": 1,
+   "source": null,
+   "json_uri": "https://ipfs.io/ipfs/bafkreihrdoemicjtxefmwuofyrmaszpckqyqqy3qg6bwglclwhupgl2rju",
+   "block0_share": null,
+   "peak15_usd": 312852.90949590976,
+   "peak15_ms": 1793214000000,
+   "hold_ratio": 0.6498092226297913,
+   "hold_checked": 1,
+   "creator_other_migrations": 0,
+   "creator_other_winners": 0,
+   "ia": null,
+   "mcap_now": 197364,
+   "vol24": 424812.84
+  }
+ ]
+}

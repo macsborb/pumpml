@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PumpML</title>
+<style>
+:root{
+  --bg:#0b0d12;--panel:#12151d;--panel2:#181c26;--line:#232838;--text:#e6e9f2;--muted:#8a93a8;
+  --green:#2fd27a;--red:#ff5c6c;--amber:#f5b942;--blue:#5b8cff;--violet:#a57bff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--blue);text-decoration:none}
+header{position:sticky;top:0;z-index:5;background:rgba(11,13,18,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:16px;padding:12px 20px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:18px;letter-spacing:.3px}
+.brand span{color:var(--violet)}
+.health{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.ok{background:var(--green)}.ko{background:var(--red)}.wait{background:var(--amber)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:0 20px 12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.kpi .v{font-size:20px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--muted)}
+.tabs{display:flex;gap:6px;padding:0 20px 12px;flex-wrap:wrap}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer;font-size:13px}
+.tab.on{color:var(--text);border-color:var(--violet);background:#1d1830}
+main{display:grid;grid-template-columns:1fr;gap:16px;padding:16px 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:border-color .15s}
+.card:hover{border-color:#39405a}
+.card.buy{border-left:3px solid var(--green)}.card.skip{border-left:3px solid #39405a}.card.observe{border-left:3px solid var(--amber)}.card.watch{border-left:3px solid var(--blue)}
+.row{display:flex;gap:10px;align-items:center}
+.img{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--panel2);flex:none}
+.name{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sym{color:var(--muted);font-size:12px}
+.nav{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px}
+.nav button{background:none;border:none;color:var(--muted);padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.nav button.on{background:#1d1830;color:var(--text)}
+.search{flex:1;min-width:220px;max-width:520px;display:flex;gap:6px;margin-left:auto}
+.search input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font:inherit}
+.search button,.btn{background:var(--violet);border:none;color:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+.btn.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--text)}
+.copy{background:rgba(255,92,108,.15);color:var(--red)}
+.orig{background:rgba(47,210,122,.15);color:var(--green)}
+.vampbox{background:rgba(255,92,108,.08);border:1px solid rgba(255,92,108,.35);border-radius:10px;padding:10px;font-size:13px}
+.searchres{padding:0 20px 12px}
+.searchres .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+section[hidden]{display:none!important}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px}
+.panel h2{margin:0 0 10px;font-size:15px}
+.chart{width:100%;height:240px;background:var(--panel2);border-radius:10px;display:block}
+.hbar{display:grid;grid-template-columns:200px 1fr 70px;gap:8px;align-items:center;font-size:12px;padding:2px 0}
+.hbar i{display:block;height:8px;border-radius:4px;background:var(--violet)}
+.hbar span:first-child{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr.sel td{background:#1d1830}
+tbody tr{cursor:pointer}
+.note{color:var(--muted);font-size:12px;margin-top:6px}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ph h2{margin:0}
+.btn.small{padding:4px 10px;font-size:12px;font-weight:500}
+.what{color:var(--text);opacity:.85;font-size:13px;margin:6px 0 10px;line-height:1.5}
+.how{color:var(--muted);font-size:12px;margin:8px 0 0;line-height:1.5}
+.verdict{border-radius:12px;padding:14px 16px;border:1px solid var(--line);font-size:14px;line-height:1.5}
+.verdict .vt{font-size:17px;font-weight:700;margin-bottom:4px}
+.verdict.wait{background:rgba(245,185,66,.08);border-color:rgba(245,185,66,.4)}
+.verdict.ok{background:rgba(47,210,122,.08);border-color:rgba(47,210,122,.4)}
+.verdict.ko{background:rgba(255,92,108,.08);border-color:rgba(255,92,108,.4)}
+.glossary{margin-top:16px}
+.glossary dl{display:grid;grid-template-columns:180px 1fr;gap:8px 16px;margin:12px 0 0;font-size:13px}
+.glossary dt{font-weight:600}
+.glossary dd{margin:0;color:var(--muted);line-height:1.5}
+td[title],th[title]{cursor:help}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.b-buy{background:rgba(47,210,122,.15);color:var(--green)}.b-skip{background:#20253a;color:var(--muted)}.b-observe{background:rgba(245,185,66,.15);color:var(--amber)}.b-watch{background:rgba(91,140,255,.15);color:var(--blue)}
+.bar{height:6px;background:var(--panel2);border-radius:99px;position:relative;overflow:hidden}
+.bar>i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--blue),var(--violet));border-radius:99px}
+.bar>b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--amber)}
+.meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.fb{display:flex;gap:6px}
+.fb button{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:6px;cursor:pointer;font-size:15px}
+.fb button.on.up{background:rgba(47,210,122,.18);border-color:var(--green)}
+.fb button.on.down{background:rgba(255,92,108,.18);border-color:var(--red)}
+.desc{font-size:12px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.9em}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--panel);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .2s;z-index:10;overflow-y:auto;padding:18px}
+.drawer.open{transform:none}
+.close{float:right;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
+h3{margin:18px 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+canvas{width:100%;height:220px;background:var(--panel2);border-radius:10px}
+.reasons div{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{background:var(--panel2);border:1px solid var(--line);color:var(--muted);padding:4px 10px;border-radius:999px;cursor:pointer;font-size:12px}
+.tag.on{color:var(--text);border-color:var(--violet)}
+textarea{width:100%;min-height:70px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px;font:inherit}
+.save{margin-top:8px;background:var(--violet);border:none;color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600}
+.feat{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 16px;font-size:12px;font-variant-numeric:tabular-nums}
+.feat span:nth-child(odd){color:var(--muted)}
+.links a{margin-right:12px;font-size:13px}
+.empty{color:var(--muted);text-align:center;padding:60px 0}
+table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right}
+td:first-child,th:first-child{text-align:left}
+th{color:var(--muted);font-weight:500}
+#tvchart canvas{background:transparent;border-radius:0}
+.kols{display:flex;flex-wrap:wrap;gap:6px}
+.kolb{display:flex;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 6px;color:var(--text);font-size:12px;line-height:1.2}
+.kolb .e{font-size:18px;width:26px;height:26px;display:grid;place-items:center;background:#0b0d12;border-radius:50%}
+.kolb .sc{color:var(--muted);font-variant-numeric:tabular-nums}
+.kolb.good{border-color:rgba(245,185,66,.6)}.kolb.good .sc{color:var(--amber)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+summary{cursor:pointer;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div class="brand">Pump<span>ML</span></div>
+    <div class="nav" id="nav"><button data-v="coins" class="on">Coins</button><button data-v="models">Modeles</button><button data-v="ai">IA</button><button data-v="ex">Exemples</button><button data-v="amm">Apres migration</button></div>
+    <div class="health" id="health"></div>
+    <form class="search" id="search"><input id="q" placeholder="Chercher un CA ou un lien pump.fun / dexscreener..." autocomplete="off"><button>Chercher</button></form>
+  </div>
+  <div class="searchres" id="searchres" hidden></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="tabs" id="tabs"></div>
+</header>
+<main>
+  <section id="v-coins">
+    <div class="grid" id="grid"></div>
+    <details id="models"><summary>Modeles et entrainements</summary><div id="modelsBody"></div></details>
+  </section>
+  <section id="v-models" hidden></section>
+  <section id="v-ai" hidden></section>
+  <section id="v-ex" hidden></section>
+  <section id="v-amm" hidden></section>
+</main>
+<aside class="drawer" id="drawer"></aside>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sol = (v, d=3) => v == null ? '-' : (v>0?'+':'') + v.toFixed(d);
+const cls = v => v == null ? '' : v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+const ago = ms => { const s = Math.max(0, (Date.now()-ms)/1000); return s<60? `${s|0}s` : s<3600? `${s/60|0}min` : `${s/3600|0}h`; };
+const TABS = [['all','Tout'],['buy','Achats IA'],['open','Positions ouvertes'],['missed','Rates (bons non achetes)'],['unrated','A noter'],['rated','Notes'],['watch','En analyse (< 7 min)'],['skip','Ignores'],['observe','Observation']];
+// Categories de narrative : sur un coin note 👍, chacune devient un "filtre" que l'IA apprend (bibliotheque).
+const NARR = ['news du jour','celebrite / influenceur','tweet viral','animal','ia / tech','politique','meme / humour','culture internet','crypto meta','sport','evenement mondial','communaute / culte'];
+// Signaux : pourquoi le coin est bon ou mauvais au-dela de sa narrative.
+const TAGS = ['image top','compte X solide','premier sur la narrative','dev suspect','bundle / snipers','rug','trop tard','copie'];
+let filter = 'all', cache = [], current = null, champId = null, view = 'coins';
+
+$('#tabs').innerHTML = TABS.map(([k,l]) => `<button class="tab ${k===filter?'on':''}" data-k="${k}">${l}</button>`).join('');
+$('#tabs').onclick = e => { const k = e.target.dataset.k; if (!k) return; filter = k; $('#grid').innerHTML = '';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.k===k)); loadDecisions(); };
+
+async function api(p, opt) { const r = await fetch(p, opt); if (!r.ok) throw new Error(r.status); return r.json(); }
+
+async function loadState() {
+  try {
+    const s = await api('/api/state');
+    solUsd = s.sol_usd || solUsd;
+    const hb = n => { const h = s.heartbeat[n]; if (!h) return `<span><i class="dot wait"></i>${n} : jamais vu</span>`;
+      const late = (s.now - h.ms)/1000; return `<span><i class="dot ${late<180?'ok':'ko'}"></i>${n} (${ago(h.ms)})</span>`; };
+    const ci = (s.heartbeat.collector||{}).info || {};
+    $('#health').innerHTML = hb('collector') + hb('paper') +
+      `<span>tokens/min ${ci.tokens_new ?? '-'} · trades/min ${ci.trades ?? '-'} · suivis ${ci.tracked ?? '-'}</span>`;
+    const p = s.positions, p24 = s.positions_24h, c = s.champion; champId = c ? c.id : null;
+    const k = [
+      ['PnL paper total (Jupiter, tous modeles)', `<span class="${cls(p.pnl)}">${sol(p.pnl)} SOL</span>`, `${p.closed||0} trades fermes · ${p.open||0} ouverts`],
+      ['PnL 24h', `<span class="${cls(p24.pnl)}">${sol(p24.pnl)} SOL</span>`, `${p24.n||0} trades`],
+      ['Taux de gain', p.closed ? `${(100*p.wins/p.closed).toFixed(0)}%` : '-', `mise ${s.strategy.buy_sol} SOL · TP +${s.strategy.take_profit*100}% · SL -${s.strategy.stop_loss*100}%`],
+      ['Coins notes 24h', s.decisions_24h.n||0, `${s.decisions_24h.buys||0} achats`],
+      ['Rates 24h', s.missed_24h.good||0, `sur ${s.missed_24h.n||0} ignores resolus`],
+      ['Tes avis', s.feedback.n||0, `👍 ${s.feedback.up||0} · 👎 ${s.feedback.down||0}`],
+      ['Modele', c ? c.id : (s.history.length ? 'non promu' : 'aucun'), c ? `AUC ${c.metrics.valid_auc?.toFixed(3)} · valid ${sol(c.metrics.valid_pnl,2)} SOL` : (s.history.length ? 'le dernier modele note en attendant' : 'collecte des donnees')],
+    ];
+    $('#kpis').innerHTML = k.map(([l,v,x]) => `<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${x}</div></div>`).join('');
+    const h = s.history.slice().reverse();
+    $('#modelsBody').innerHTML = h.length ? `<table><tr><th>Modele</th><th>Promu</th><th>AUC</th><th>PnL valid</th><th>Trades</th><th>Acheter tout</th><th>Champion</th><th>Avis</th></tr>` +
+      h.map(m => `<tr><td>${m.id}</td><td>${m.promoted?'✅':'—'}</td><td>${m.valid_auc?.toFixed(3) ?? '-'}</td><td class="${cls(m.valid_pnl)}">${sol(m.valid_pnl,2)}</td><td>${m.valid_trades}</td><td class="${cls(m.valid_buy_all_pnl)}">${sol(m.valid_buy_all_pnl,1)}</td><td>${m.champion_valid_pnl!=null?sol(m.champion_valid_pnl,2):'-'}</td><td>${m.feedback_used}</td></tr>`).join('') + '</table>' +
+      (c ? `<h3>Ce qui compte le plus pour le champion</h3><div class="reasons">${c.importance.map(([f,g])=>`<div><span>${esc(f)}</span><span>${g.toFixed(0)}</span></div>`).join('')}</div>` : '')
+      : '<div class="empty">Pas encore de modele : il faut au moins 2 jours de donnees completes.</div>';
+  } catch (e) { $('#health').innerHTML = '<span><i class="dot ko"></i>dashboard injoignable</span>'; }
+}
+
+function card(d) {
+  const fin = d.final, thr = d.threshold;
+  const mult = d.mcap_now && d.mcap_sol ? d.mcap_now / d.mcap_sol : null;
+  const pnl = d.pos_status==='open' ? (d.pos_value!=null ? d.pos_value - d.pos_cost : null) : d.pos_status==='closed' ? d.pos_pnl : null;
+  const posNote = {no_quote: 'achat impossible (pas de cotation Jupiter)', cap: 'non achete (plafond de positions)'}[d.pos_status];
+  const img = d.image_path ? `<img class="img" loading="lazy" src="/img/${encodeURI(d.image_path.replace(/\\/g,'/'))}">` : `<div class="img"></div>`;
+  return `<div class="card ${d.action}" data-m="${d.mint}">
+    <div class="row">${img}<div style="min-width:0;flex:1">
+      <div class="row" style="justify-content:space-between"><div class="name">${esc(d.name)}</div><span class="badge b-${d.action}" title="${d.action==='watch'?'l\'IA le reanalyse jusqu\'a 7 min':''}">${{buy:'achat a '+Math.round(d.age_s||0)+' s', skip:'ignore', watch:'en analyse '+Math.round(d.age_s||0)+' s', observe:'observe'}[d.action]||d.action}</span></div>
+      <div class="sym">${d.vamp?`<span class="badge copy" title="copie de ${esc(d.vamp.symbol||d.vamp.mint)} (${(d.vamp.how||[]).join(', ')})${d.vamp.veto?' : '+esc(d.vamp.veto):''}">${d.vamp.veto?'copie bloquee':'copie'}</span> `:''}$${esc(d.symbol)} · ${ago(d.created_ms)} · ${d.twitter?'𝕏':''}${d.model_id && d.model_id!==champId?' · <span title="aucun modele n&#39;a encore battu les criteres de promotion">modele non promu</span>':''}</div></div></div>
+    <div class="desc">${esc(d.description)||'<i>pas de description</i>'}</div>
+    ${fin!=null ? `<div class="bar" title="score ${fin.toFixed(3)} / seuil ${thr?.toFixed(3)}"><i style="width:${Math.min(100,fin*100)}%"></i><b style="left:${Math.min(100,(thr||0)*100)}%"></b></div>` : ''}
+    <div class="meta"><span>mcap ${solUsd ? (d.mcap_sol ? usdFmt(d.mcap_sol * solUsd) : '-') + ' → ' + (d.mcap_now ? usdFmt(d.mcap_now * solUsd) : '-') : (d.mcap_sol?.toFixed(1) ?? '-') + ' → ' + (d.mcap_now?.toFixed(1) ?? '-') + ' SOL'} ${mult?`<b class="${cls(mult-1)}">x${mult.toFixed(2)}</b>`:''}</span>
+      <span>${pnl!=null?`position Jupiter <b class="${cls(pnl)}">${sol(pnl)}</b>${d.pos_status==='open'?' (ouverte)':''}`:posNote?posNote:d.pos_status==='open'?'position ouverte, en attente de cotation':d.resolved?`si achete <b class="${cls(d.pnl_sim)}">${sol(d.pnl_sim)}</b>`:''}</span></div>
+    <div class="fb"><button class="up ${d.verdict===1?'on':''}" data-v="1" title="Bon choix / bon coin">👍</button><button class="down ${d.verdict===-1?'on':''}" data-v="-1" title="Mauvais choix / mauvais coin">👎</button></div>
+  </div>`;
+}
+
+async function loadDecisions() {
+  try {
+    cache = await api('/api/decisions?limit=120&filter=' + filter);
+    const grid = $('#grid');
+    if (!cache.length) { grid.innerHTML = '<div class="empty">Rien pour l\'instant. Le collecteur et le paper trader tournent-ils ?</div>'; return; }
+    grid.querySelector('.empty')?.remove();
+    // Mise a jour carte par carte : on ne recree que ce qui a change (les images restent chargees).
+    const old = new Map([...grid.children].map(el => [el.dataset.m, el]));
+    let prev = null;
+    for (const d of cache) {
+      const html = card(d);
+      let el = old.get(d.mint);
+      if (!el || el._html !== html) {
+        const t = document.createElement('template'); t.innerHTML = html.trim();
+        const fresh = t.content.firstChild; fresh._html = html;
+        el ? el.replaceWith(fresh) : null; el = fresh;
+      }
+      old.delete(d.mint);
+      const want = prev ? prev.nextSibling : grid.firstChild;
+      if (want !== el) grid.insertBefore(el, want);
+      prev = el;
+    }
+    old.forEach(el => el.remove());
+  } catch (e) {}
+}
+
+$('#grid').onclick = async e => {
+  const c = e.target.closest('.card'); if (!c) return;
+  const v = e.target.closest('button')?.dataset.v;
+  if (v) { e.stopPropagation(); const d = cache.find(x => x.mint===c.dataset.m);
+    const nv = d.verdict === +v ? 0 : +v; await sendFb(d.mint, nv, d.tags||'', d.comment||''); d.verdict = nv || null;
+    c.querySelector('.up').classList.toggle('on', d.verdict===1); c.querySelector('.down').classList.toggle('on', d.verdict===-1); return; }
+  openToken(c.dataset.m);
+};
+
+async function sendFb(mint, verdict, tags, comment) {
+  await api('/api/feedback', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({mint, verdict, tags, comment})});
+}
+
+async function openToken(mint) {
+  current = mint;
+  const t = await api('/api/token/' + mint);
+  const d = cache.find(x => x.mint===mint) || t;
+  const s = t.social || {}, f = t.features || {};
+  const tagsOn = new Set((d.tags||'').split(',').filter(Boolean));
+  const img = t.image_path ? `<img class="img" style="width:96px;height:96px" src="/img/${encodeURI(t.image_path.replace(/\\/g,'/'))}">` : '';
+  $('#drawer').innerHTML = `<button class="close" onclick="$('#drawer').classList.remove('open')">×</button>
+    <div class="row">${img}<div><div class="name" style="font-size:20px">${esc(t.name)} <span class="sym">$${esc(t.symbol)}</span></div>
+    <div class="links"><a target="_blank" href="https://pump.fun/coin/${mint}">pump.fun</a><a target="_blank" href="https://dexscreener.com/solana/${mint}">DexScreener</a><a target="_blank" href="https://solscan.io/token/${mint}">Solscan</a>${t.twitter?`<a target="_blank" rel="noreferrer" href="${esc(t.twitter)}">𝕏</a>`:''}</div>
+    <div class="sym">${mint}</div></div></div>
+    <p>${esc(t.description)}</p>
+    <h3>Market cap en ${t.usd ? 'dollars' : 'SOL (prix du SOL indisponible)'} · ${t.n_trades} trades · bougies de ${t.candle_s < 60 ? t.candle_s + ' s' : t.candle_s / 60 + ' min'}</h3>
+    <div id="curvebar"></div><div id="tvchart" style="height:340px;border-radius:10px;overflow:hidden;border:1px solid var(--line)"></div>
+    <div class="sym" style="margin-top:4px">Bougies de market cap (echelle log). Molette : zoom · glisser : deplacer.
+      Bulles : achat d un KOL (vert, <span style="color:var(--amber)">orange</span> = KOL qui a du flair), vente d un KOL (rouge) ; fleches violettes : achat / vente de l IA ; carres bleus : analyses au-dessus du seuil.</div>
+    <h3>KOL sur ce coin</h3><div id="kolbox"></div>
+    ${t.vamp ? `<h3>Copie detectee</h3><div class="vampbox">Ce coin reprend <b>${(t.vamp.how||[]).join(', ')}</b> de
+      <a href="#" onclick="openToken('${t.vamp.mint}');return false">${esc(t.vamp.name||'')} $${esc(t.vamp.symbol||t.vamp.mint.slice(0,6))}</a>,
+      sorti ${t.vamp.age_min} min avant${t.vamp.max_mult!=null?` (a fait x${t.vamp.max_mult.toFixed(1)}${t.vamp.migrated?', migre':''})`:' (resultat pas encore connu)'}.
+      ${t.vamp.n>1?`${t.vamp.n} coins similaires avant lui.`:''}
+      ${t.vamp.veto?`<br><b>Pas achete malgre le score du modele</b> : ${esc(t.vamp.veto)}.`:''}</div>` : (t.features && t.features.is_first===1 ? '<h3>Originalite</h3><div class="sym">Aucun coin similaire avant lui (ticker, nom, image, lien X) : c\'est un original.</div>' : '')}
+    <h3>Decision de l'IA</h3>
+    ${(()=>{ let sc=[]; try{ sc=JSON.parse(t.scores||'[]'); }catch(e){} return sc.length ? `<div class="sym" style="margin-bottom:8px">Score a chaque point d'analyse : ${sc.map(([a,s])=>`${a} s → <b>${s==null?'-':s.toFixed(3)}</b>`).join(' · ')}</div>` : ''; })()}
+    <div class="feat"><span>Action</span><span>${d.action||t.action||'-'}</span><span>Score</span><span>${t.final?.toFixed(3) ?? '-'} (seuil ${t.threshold?.toFixed(3) ?? '-'})</span>
+      <span>Modele marche</span><span>${t.score?.toFixed(3) ?? '-'}</span><span>Ton gout (modele perso)</span><span>${t.taste?.toFixed(3) ?? 'pas encore assez d\'avis'}</span>
+      <span>Si achete</span><span class="${cls(t.pnl_sim)}">${t.resolved ? sol(t.pnl_sim)+' SOL ('+t.exit_reason_sim+')' : 'en cours'}</span><span>Pic apres entree</span><span>${t.max_mult_after ? 'x'+t.max_mult_after.toFixed(2) : '-'}</span></div>
+    ${t.top_reasons?.length ? `<h3>Pourquoi (contributions)</h3><div class="reasons">${t.top_reasons.map(([k,v])=>`<div><span>${esc(k)}</span><span class="${cls(v)}">${v>0?'+':''}${v.toFixed(3)}</span></div>`).join('')}</div>` : ''}
+    <h3>Compte X</h3>
+    ${s.kind ? `<div class="feat"><span>Lien</span><span>${esc(s.kind)} ${s.handle?'@'+esc(s.handle):''}</span><span>Abonnes</span><span>${s.followers ?? '-'}</span>
+      <span>Certifie</span><span>${s.verified?'oui '+(s.verified_type||''):'non'}</span><span>Age du compte</span><span>${s.account_created_ms?((t.created_ms-s.account_created_ms)/864e5).toFixed(0)+' j':'-'}</span>
+      <span>Likes / RT / vues</span><span>${s.likes ?? '-'} / ${s.retweets ?? '-'} / ${s.views ?? '-'}</span><span>Mentions</span><span>${esc(s.mentions||'-')}</span></div>
+      ${s.tweet_text?`<p style="background:var(--panel2);padding:10px;border-radius:8px">${esc(s.tweet_text)}</p>`:''}` : '<div class="sym">pas de lien X</div>'}
+    <h3>Ton avis (l'IA apprend de toi)</h3>
+    <div class="fb"><button class="up ${d.verdict===1?'on':''}" id="fbUp">👍 Bon coin / bon choix</button><button class="down ${d.verdict===-1?'on':''}" id="fbDown">👎 Mauvais</button></div>
+    <h3>Narrative (une ou plusieurs)</h3>
+    <div class="tags" id="tags">${[...new Set([...NARR, ...[...tagsOn].filter(x=>!NARR.includes(x)&&!TAGS.includes(x))])].map(x=>`<span class="tag ${tagsOn.has(x)?'on':''}">${esc(x)}</span>`).join('')}
+      <input id="newTag" placeholder="+ autre categorie" style="background:var(--panel2);border:1px dashed var(--line);color:var(--text);border-radius:999px;padding:4px 10px;font-size:12px;width:150px"></div>
+    <h3>Signaux</h3><div class="tags" id="tags2">${TAGS.map(x=>`<span class="tag ${tagsOn.has(x)?'on':''}">${x}</span>`).join('')}</div>
+    <div class="note">Tes categories sur les coins 👍 deviennent des filtres de narrative pour l'IA : elle mesure a quel point chaque nouveau coin ressemble a tes bons exemples de chaque categorie.</div>
+    <textarea id="comment" placeholder="En une ou deux phrases : pourquoi c'est une bonne (ou mauvaise) narrative ? Ex. : tweet d'un compte a 2M d'abonnes 1 min avant, meme du jour, premier coin dessus.">${esc(d.comment||'')}</textarea>
+    <button class="save" id="save">Enregistrer</button> <span id="saved" class="sym"></span>
+    <h3>Features au moment de la decision</h3><div class="feat">${Object.entries(f).filter(([k,v])=>typeof v==='number').map(([k,v])=>`<span>${esc(k)}</span><span>${Number.isInteger(v)?v:v.toFixed(4)}</span>`).join('')}</div>`;
+  $('#drawer').classList.add('open');
+  let verdict = d.verdict || 0;
+  const setV = v => { verdict = verdict===v ? 0 : v; $('#fbUp').classList.toggle('on', verdict===1); $('#fbDown').classList.toggle('on', verdict===-1); };
+  $('#fbUp').onclick = () => setV(1); $('#fbDown').onclick = () => setV(-1);
+  $('#tags').onclick = e => e.target.classList.contains('tag') && e.target.classList.toggle('on');
+  $('#tags2').onclick = e => e.target.classList.contains('tag') && e.target.classList.toggle('on');
+  $('#save').onclick = async () => {
+    const extra = ($('#newTag')?.value || '').trim().toLowerCase().replace(/,/g, ' ');
+    const tags = [...new Set([...document.querySelectorAll('#tags .tag.on, #tags2 .tag.on')].map(x=>x.textContent).concat(extra ? [extra] : []))].join(',');
+    await sendFb(mint, verdict, tags, $('#comment').value);
+    Object.assign(d, {verdict: verdict||null, tags, comment: $('#comment').value});
+    $('#saved').textContent = 'enregistre ✓'; loadDecisions();
+  };
+  drawChart(t);
+}
+
+let coinTv = null;  // graphique TradingView (lightweight-charts) du coin ouvert
+let solUsd = null;  // prix du SOL en dollars (fourni par /api/state)
+const usdFmt = v => v >= 1e6 ? '$' + (v / 1e6).toFixed(v >= 1e7 ? 0 : 1) + 'M' : v >= 1e3 ? '$' + (v / 1e3).toFixed(v >= 1e4 ? 0 : 1) + 'k' : '$' + v.toFixed(0);
+const tz = () => -new Date().getTimezoneOffset() * 60;  // TradingView affiche l heure UTC : on decale en heure locale
+function drawChart(t) {
+  const el = $('#tvchart'); if (!el || !window.LightweightCharts) return;
+  const fmt = t.usd ? usdFmt : v => v.toFixed(0) + ' SOL';
+  const series = t.series || [];
+  const last = series.filter(s => s[4] != null && s[4] < 1).slice(-1)[0];
+  const prog = t.migrated_ms ? 1 : (last ? last[4] : 0);
+  $('#curvebar').innerHTML = `<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">
+      <span>Courbe de bonding : <b style="color:var(--text)">${(100 * prog).toFixed(prog < 0.1 ? 1 : 0)} %</b>${t.migrated_ms ? ' · <b class="pos">migre</b>' : ''}</span>
+      <span>migration vers ${fmt(t.migration_mcap)}</span></div>
+    <div style="height:6px;background:var(--panel2);border-radius:3px;margin:4px 0 8px;overflow:hidden">
+      <div style="height:100%;width:${(100 * prog).toFixed(1)}%;background:${prog >= 1 ? 'var(--green)' : 'var(--violet)'}"></div></div>`;
+  const cs = t.candles || [], step = t.candle_s || 1, off = tz();
+  const bucket = ms => Math.floor(ms / 1000 / step) * step + off;
+  if (!coinTv || coinTv.mint !== t.mint || !el.contains(coinTv.el)) {
+    if (coinTv) coinTv.chart.remove();
+    el.innerHTML = '';
+    const inner = document.createElement('div'); inner.style.height = '100%'; el.appendChild(inner);
+    const chart = LightweightCharts.createChart(inner, {
+      autoSize: true,
+      layout: { background: { type: 'solid', color: '#0f1218' }, textColor: '#8a93a8', fontSize: 11 },
+      grid: { vertLines: { color: '#1b2030' }, horzLines: { color: '#1b2030' } },
+      rightPriceScale: { borderColor: '#232838', mode: LightweightCharts.PriceScaleMode.Logarithmic, scaleMargins: { top: 0.08, bottom: 0.22 } },
+      timeScale: { borderColor: '#232838', timeVisible: true, secondsVisible: step < 60, rightOffset: 4 },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      localization: { priceFormatter: fmt },
+    });
+    const candle = chart.addCandlestickSeries({ upColor: '#2fd27a', downColor: '#ff5c6c', wickUpColor: '#2fd27a', wickDownColor: '#ff5c6c',
+      borderVisible: false, priceFormat: { type: 'custom', formatter: fmt, minMove: 0.01 } });
+    const vol = chart.addHistogramSeries({ priceScaleId: 'vol', priceFormat: { type: 'custom', formatter: v => v.toFixed(2) + ' SOL' } });
+    chart.priceScale('vol').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+    coinTv = { chart, candle, vol, mint: t.mint, el: inner, lines: [], fitted: false };
+  }
+  const { chart, candle, vol } = coinTv;
+  candle.setData(cs.map(c => ({ time: c[0] + off, open: c[1], high: c[2], low: c[3], close: c[4] })));
+  vol.setData(cs.map(c => ({ time: c[0] + off, value: c[5] + c[6], color: c[5] >= c[6] ? 'rgba(47,210,122,.45)' : 'rgba(255,92,108,.45)' })));
+  coinTv.lines.forEach(l => candle.removePriceLine(l));
+  coinTv.lines = [];
+  if (t.migration_mcap) coinTv.lines.push(candle.createPriceLine({ price: t.migration_mcap, color: '#2fd27a', lineStyle: 2, lineWidth: 1, axisLabelVisible: true, title: 'migration' }));
+  // bulles : KOL (achat vert sous la bougie, vente rouge au-dessus), achat / vente simules de l IA, analyses au-dessus du seuil
+  const mk = [], named = new Set();
+  for (const k of (t.kol || [])) {
+    const key = k.person + (k.is_buy ? '+' : '-'), first = !named.has(key); named.add(key);
+    const good = k.known >= 3 && k.score >= 2 * k.base;
+    mk.push({ time: bucket(k.ms), position: k.is_buy ? 'belowBar' : 'aboveBar', shape: 'circle',
+      color: k.is_buy ? (good ? '#f5b942' : '#2fd27a') : '#ff5c6c', size: Math.min(2, 0.6 + Math.sqrt(k.sol || 0) / 2),
+      text: first ? `${k.emoji || ''} ${k.person}${k.is_buy ? '' : ' vend'}` : '' });
+  }
+  const pos = t.position;
+  if (pos && pos.entry_ms) mk.push({ time: bucket(pos.entry_ms), position: 'belowBar', shape: 'arrowUp', color: '#a57bff', text: 'IA achat' });
+  if (pos && pos.exit_ms) mk.push({ time: bucket(pos.exit_ms), position: 'aboveBar', shape: 'arrowDown', color: '#a57bff',
+    text: `IA vente ${pos.pnl != null ? (pos.pnl > 0 ? '+' : '') + pos.pnl.toFixed(3) : ''}` });
+  let sc = []; try { sc = JSON.parse(t.scores || '[]'); } catch (e) {}
+  const created = t.created_ms || (cs[0] && cs[0][0] * 1000) || 0;
+  for (const [a, v] of sc) if (v != null && t.threshold != null && v >= t.threshold)
+    mk.push({ time: bucket(created + a * 1000), position: 'aboveBar', shape: 'square', color: '#5b8cff', size: 0.6, text: '' });
+  const times = new Set(cs.map(c => c[0] + off));
+  candle.setMarkers(mk.filter(m => times.has(m.time)).sort((a, b) => a.time - b.time));
+  if (!coinTv.fitted) { chart.timeScale().fitContent(); coinTv.fitted = true; }
+  // liste des KOL sous le graphique
+  const ks = t.kol || [], people = {};
+  for (const k of ks) { const p = people[k.person] ||= { ...k, buy: 0, sell: 0, first: k.ms }; p[k.is_buy ? 'buy' : 'sell'] += k.sol || 0; }
+  const ag = s => { const x = (s - created) / 1000; return x < 0 ? '-' : x < 60 ? x.toFixed(0) + ' s' : x < 3600 ? (x / 60).toFixed(1) + ' min' : (x / 3600).toFixed(1) + ' h'; };
+  $('#kolbox').innerHTML = !ks.length ? '<div class="sym">Aucun KOL de la liste n a trade ce coin (pour l instant).</div>'
+    : `<div class="kols">${Object.values(people).sort((a, b) => a.first - b.first).map(p => {
+        const good = p.known >= 3 && p.score >= 2 * p.base;
+        return `<a class="kolb ${good ? 'good' : ''}" target="_blank" href="https://solscan.io/account/${p.wallet}" title="Flair : ${(100 * p.score).toFixed(0)} % de ses achats ont migre (${p.known} achats connus, moyenne ${(100 * p.base).toFixed(0)} %)">
+          <span class="e">${p.emoji || '👤'}</span><span><b>${esc(p.person)}</b><br><span class="sym">a ${ag(p.first)} · achete ${p.buy.toFixed(2)}${p.sell ? ' · vendu ' + p.sell.toFixed(2) : ''} SOL</span></span>
+          <span class="sc">${(100 * p.score).toFixed(0)} %</span></a>`; }).join('')}</div>`;
+}
+
+loadState(); loadDecisions();
+setInterval(() => { if (view === 'coins') loadState(); }, 5000);
+setInterval(() => { if (view !== 'coins') return; loadDecisions(); if (current && $('#drawer').classList.contains('open')) api('/api/token/'+current).then(t=>drawChart(t)).catch(()=>{}); }, 4000);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="/static/ai.js"></script>
+<script src="/static/models.js"></script>
+</body>
+</html>
